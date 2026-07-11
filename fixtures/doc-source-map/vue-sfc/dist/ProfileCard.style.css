@@ -1,0 +1,11 @@
+
+/*
+ * @component ProfileCard Scoped styles for the Vue profile card.
+ * @selector .profile-card Public selector exposed by the component root.
+ * @cssprop --profile-card-accent Accent color consumed by the card border.
+ */
+.profile-card[data-v-profile-card] {
+  --profile-card-accent: #0f766e;
+  border: 1px solid var(--profile-card-accent);
+  padding: 0.75rem;
+}

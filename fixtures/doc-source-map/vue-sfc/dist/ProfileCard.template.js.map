@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": [
+    "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue"
+  ],
+  "names": [],
+  "mappings": ";;;;IACE,yOAIG;IACH,oBAGU;MAHD,KAAK,EAAC,cAAc;MAAC,gBAAc,EAAC,aAAa;MAAE,OAAK,uCAAE,SAAI,WAAW,UAAK,CAAC,IAAI,CAAC,EAAE;;MAC7F,oBAA0C,6BAAnC,oBAAe,CAAC,UAAK,CAAC,IAAI;MACjC,YAAuB",
+  "file": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+  "sourceRoot": ""
+}

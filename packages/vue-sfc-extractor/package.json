@@ -1,0 +1,19 @@
+{
+  "name": "@hia-doc/vue-sfc-extractor",
+  "version": "0.0.0",
+  "description": "Vue SFC parser and VueDoc extraction package for HIA.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@hia-doc/vuedoc-spec": "0.0.0",
+    "@vue/compiler-sfc": "3.5.39"
+  }
+}

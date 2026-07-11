@@ -1,0 +1,523 @@
+{
+  "schemaVersion": "0.2.0",
+  "id": "vuedoc:ProfileCard",
+  "title": "ProfileCard.vue",
+  "defaultLocale": "en",
+  "locales": [
+    "en"
+  ],
+  "nodes": [
+    {
+      "id": "root",
+      "kind": "root",
+      "title": "ProfileCard.vue",
+      "symbolIds": [
+        "component:ProfileCard",
+        "slot:profilecard:actions",
+        "stylehook:profilecard:profile-card",
+        "expose:profilecard:formatuserlabel",
+        "event:profilecard:select",
+        "selector:profilecard:profile-card",
+        "cssprop:profilecard:-profile-card-accent"
+      ]
+    }
+  ],
+  "symbols": [
+    {
+      "id": "component:ProfileCard",
+      "name": "ProfileCard",
+      "kind": "html-component",
+      "summary": "Profile card Vue SFC component.",
+      "source": {
+        "model": "hia-source",
+        "modelVersion": "0.2.0",
+        "mode": "link",
+        "definedIn": {
+          "kind": "defined-in",
+          "relativePath": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+          "language": "vue",
+          "position": {
+            "line": 1,
+            "column": 12
+          },
+          "range": {
+            "start": {
+              "line": 1,
+              "column": 12
+            },
+            "end": {
+              "line": 11,
+              "column": 2
+            }
+          },
+          "link": {
+            "enabled": false,
+            "openMode": "same-tab"
+          }
+        },
+        "primaryBlock": null,
+        "references": [],
+        "fragments": [],
+        "diagnostics": []
+      },
+      "diagnostics": [],
+      "metadata": {
+        "vuedoc": {
+          "vueSymbolKind": "vue-component",
+          "annotation": {
+            "tag": "component",
+            "value": "ProfileCard Profile card Vue SFC component.",
+            "source": {
+              "blockId": "block:template:0",
+              "blockType": "template",
+              "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+              "range": {
+                "start": {
+                  "line": 1,
+                  "column": 12
+                },
+                "end": {
+                  "line": 11,
+                  "column": 2
+                }
+              },
+              "offset": 13
+            }
+          },
+          "bridgeTargets": [
+            "htmdoc",
+            "cssdoc",
+            "jsdoc"
+          ]
+        }
+      }
+    },
+    {
+      "id": "slot:profilecard:actions",
+      "name": "actions",
+      "kind": "html-slot",
+      "parentId": "component:ProfileCard",
+      "summary": "Optional action controls rendered by the parent app.",
+      "source": {
+        "model": "hia-source",
+        "modelVersion": "0.2.0",
+        "mode": "link",
+        "definedIn": {
+          "kind": "defined-in",
+          "relativePath": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+          "language": "vue",
+          "position": {
+            "line": 1,
+            "column": 12
+          },
+          "range": {
+            "start": {
+              "line": 1,
+              "column": 12
+            },
+            "end": {
+              "line": 11,
+              "column": 2
+            }
+          },
+          "link": {
+            "enabled": false,
+            "openMode": "same-tab"
+          }
+        },
+        "primaryBlock": null,
+        "references": [],
+        "fragments": [],
+        "diagnostics": []
+      },
+      "diagnostics": [],
+      "metadata": {
+        "vuedoc": {
+          "vueSymbolKind": "html-slot",
+          "annotation": {
+            "tag": "slot",
+            "value": "actions Optional action controls rendered by the parent app.",
+            "source": {
+              "blockId": "block:template:0",
+              "blockType": "template",
+              "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+              "range": {
+                "start": {
+                  "line": 1,
+                  "column": 12
+                },
+                "end": {
+                  "line": 11,
+                  "column": 2
+                }
+              },
+              "offset": 13
+            }
+          },
+          "bridgeTargets": [
+            "htmdoc"
+          ]
+        }
+      }
+    },
+    {
+      "id": "stylehook:profilecard:profile-card",
+      "name": ".profile-card",
+      "kind": "html-style-hook",
+      "parentId": "component:ProfileCard",
+      "summary": "Root element style hook shared with CSSDoc.",
+      "source": {
+        "model": "hia-source",
+        "modelVersion": "0.2.0",
+        "mode": "link",
+        "definedIn": {
+          "kind": "defined-in",
+          "relativePath": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+          "language": "vue",
+          "position": {
+            "line": 1,
+            "column": 12
+          },
+          "range": {
+            "start": {
+              "line": 1,
+              "column": 12
+            },
+            "end": {
+              "line": 11,
+              "column": 2
+            }
+          },
+          "link": {
+            "enabled": false,
+            "openMode": "same-tab"
+          }
+        },
+        "primaryBlock": null,
+        "references": [],
+        "fragments": [],
+        "diagnostics": []
+      },
+      "diagnostics": [],
+      "metadata": {
+        "vuedoc": {
+          "vueSymbolKind": "html-style-hook",
+          "annotation": {
+            "tag": "stylehook",
+            "value": ".profile-card Root element style hook shared with CSSDoc.",
+            "source": {
+              "blockId": "block:template:0",
+              "blockType": "template",
+              "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+              "range": {
+                "start": {
+                  "line": 1,
+                  "column": 12
+                },
+                "end": {
+                  "line": 11,
+                  "column": 2
+                }
+              },
+              "offset": 13
+            }
+          },
+          "bridgeTargets": [
+            "htmdoc"
+          ]
+        }
+      }
+    },
+    {
+      "id": "expose:profilecard:formatuserlabel",
+      "name": "formatUserLabel",
+      "kind": "vue-exposed-api",
+      "parentId": "component:ProfileCard",
+      "summary": "Public helper used by the template render path.",
+      "source": {
+        "model": "hia-source",
+        "modelVersion": "0.2.0",
+        "mode": "link",
+        "definedIn": {
+          "kind": "defined-in",
+          "relativePath": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+          "language": "vue",
+          "position": {
+            "line": 13,
+            "column": 16
+          },
+          "range": {
+            "start": {
+              "line": 13,
+              "column": 16
+            },
+            "end": {
+              "line": 30,
+              "column": 2
+            }
+          },
+          "link": {
+            "enabled": false,
+            "openMode": "same-tab"
+          }
+        },
+        "primaryBlock": null,
+        "references": [],
+        "fragments": [],
+        "diagnostics": []
+      },
+      "diagnostics": [],
+      "metadata": {
+        "vuedoc": {
+          "vueSymbolKind": "vue-exposed-api",
+          "annotation": {
+            "tag": "expose",
+            "value": "formatUserLabel Public helper used by the template render path.",
+            "source": {
+              "blockId": "block:scriptSetup:0",
+              "blockType": "scriptSetup",
+              "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+              "range": {
+                "start": {
+                  "line": 13,
+                  "column": 16
+                },
+                "end": {
+                  "line": 30,
+                  "column": 2
+                }
+              },
+              "offset": 15
+            }
+          },
+          "bridgeTargets": [
+            "jsdoc"
+          ]
+        }
+      }
+    },
+    {
+      "id": "event:profilecard:select",
+      "name": "select",
+      "kind": "html-event",
+      "parentId": "component:ProfileCard",
+      "summary": "Emitted when the profile card is selected.",
+      "source": {
+        "model": "hia-source",
+        "modelVersion": "0.2.0",
+        "mode": "link",
+        "definedIn": {
+          "kind": "defined-in",
+          "relativePath": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+          "language": "vue",
+          "position": {
+            "line": 13,
+            "column": 16
+          },
+          "range": {
+            "start": {
+              "line": 13,
+              "column": 16
+            },
+            "end": {
+              "line": 30,
+              "column": 2
+            }
+          },
+          "link": {
+            "enabled": false,
+            "openMode": "same-tab"
+          }
+        },
+        "primaryBlock": null,
+        "references": [],
+        "fragments": [],
+        "diagnostics": []
+      },
+      "diagnostics": [],
+      "metadata": {
+        "vuedoc": {
+          "vueSymbolKind": "html-event",
+          "annotation": {
+            "tag": "event",
+            "value": "select Emitted when the profile card is selected.",
+            "source": {
+              "blockId": "block:scriptSetup:0",
+              "blockType": "scriptSetup",
+              "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+              "range": {
+                "start": {
+                  "line": 13,
+                  "column": 16
+                },
+                "end": {
+                  "line": 30,
+                  "column": 2
+                }
+              },
+              "offset": 15
+            }
+          },
+          "bridgeTargets": [
+            "htmdoc"
+          ]
+        }
+      }
+    },
+    {
+      "id": "selector:profilecard:profile-card",
+      "name": ".profile-card",
+      "kind": "css-selector",
+      "parentId": "component:ProfileCard",
+      "summary": "Public selector exposed by the component root.",
+      "source": {
+        "model": "hia-source",
+        "modelVersion": "0.2.0",
+        "mode": "link",
+        "definedIn": {
+          "kind": "defined-in",
+          "relativePath": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+          "language": "vue",
+          "position": {
+            "line": 32,
+            "column": 16
+          },
+          "range": {
+            "start": {
+              "line": 32,
+              "column": 16
+            },
+            "end": {
+              "line": 43,
+              "column": 2
+            }
+          },
+          "link": {
+            "enabled": false,
+            "openMode": "same-tab"
+          }
+        },
+        "primaryBlock": null,
+        "references": [],
+        "fragments": [],
+        "diagnostics": []
+      },
+      "diagnostics": [],
+      "metadata": {
+        "vuedoc": {
+          "vueSymbolKind": "css-selector",
+          "annotation": {
+            "tag": "selector",
+            "value": ".profile-card Public selector exposed by the component root.",
+            "source": {
+              "blockId": "block:style:0",
+              "blockType": "style",
+              "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+              "range": {
+                "start": {
+                  "line": 32,
+                  "column": 16
+                },
+                "end": {
+                  "line": 43,
+                  "column": 2
+                }
+              },
+              "offset": 15
+            }
+          },
+          "bridgeTargets": [
+            "cssdoc"
+          ]
+        }
+      }
+    },
+    {
+      "id": "cssprop:profilecard:-profile-card-accent",
+      "name": "--profile-card-accent",
+      "kind": "css-custom-property",
+      "parentId": "component:ProfileCard",
+      "summary": "Accent color consumed by the card border.",
+      "source": {
+        "model": "hia-source",
+        "modelVersion": "0.2.0",
+        "mode": "link",
+        "definedIn": {
+          "kind": "defined-in",
+          "relativePath": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+          "language": "vue",
+          "position": {
+            "line": 32,
+            "column": 16
+          },
+          "range": {
+            "start": {
+              "line": 32,
+              "column": 16
+            },
+            "end": {
+              "line": 43,
+              "column": 2
+            }
+          },
+          "link": {
+            "enabled": false,
+            "openMode": "same-tab"
+          }
+        },
+        "primaryBlock": null,
+        "references": [],
+        "fragments": [],
+        "diagnostics": []
+      },
+      "diagnostics": [],
+      "metadata": {
+        "vuedoc": {
+          "vueSymbolKind": "css-custom-property",
+          "annotation": {
+            "tag": "cssprop",
+            "value": "--profile-card-accent Accent color consumed by the card border.",
+            "source": {
+              "blockId": "block:style:0",
+              "blockType": "style",
+              "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+              "range": {
+                "start": {
+                  "line": 32,
+                  "column": 16
+                },
+                "end": {
+                  "line": 43,
+                  "column": 2
+                }
+              },
+              "offset": 15
+            }
+          },
+          "bridgeTargets": [
+            "cssdoc"
+          ]
+        }
+      }
+    }
+  ],
+  "diagnostics": [],
+  "metadata": {
+    "sourceContract": "hia-vuedoc-extraction",
+    "sourceContractVersion": "0.1.0-draft",
+    "producer": {
+      "name": "@hia-doc/vue-sfc-extractor",
+      "version": "0.0.0",
+      "compiler": "@vue/compiler-sfc"
+    },
+    "bridgeBoundary": "framework-adapter",
+    "docSourceMaps": [
+      {
+        "contract": "doc-source-map",
+        "contractVersion": "0.1.0-draft",
+        "path": "ProfileCard.docmap.json",
+        "entryArtifact": "ProfileCard.template.js"
+      }
+    ]
+  }
+}

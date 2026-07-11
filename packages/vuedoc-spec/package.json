@@ -1,0 +1,15 @@
+{
+  "name": "@hia-doc/vuedoc-spec",
+  "version": "0.0.0",
+  "description": "VueDoc extraction constants for HIA Vue SFC bridge experiments.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ]
+}

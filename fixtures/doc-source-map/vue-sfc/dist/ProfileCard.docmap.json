@@ -1,0 +1,443 @@
+{
+  "contract": "doc-source-map",
+  "contractVersion": "0.1.0-draft",
+  "id": "docmap:vue-sfc:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
+  "producer": {
+    "name": "@hia-doc/vue-sfc-doc-source-map",
+    "version": "0.0.0",
+    "profile": "vue-sfc-bridge"
+  },
+  "artifacts": [
+    {
+      "id": "artifact:vuedoc:extraction",
+      "kind": "extraction-artifact",
+      "path": "ProfileCard.vuedoc.json",
+      "language": "json",
+      "role": "generated",
+      "contractRefs": [
+        {
+          "contract": "hia-vuedoc-extraction",
+          "path": "ProfileCard.vuedoc.json"
+        }
+      ]
+    },
+    {
+      "id": "artifact:htmdoc:bridge",
+      "kind": "extraction-artifact",
+      "path": "ProfileCard.htmdoc.json",
+      "language": "json",
+      "role": "generated",
+      "contractRefs": [
+        {
+          "contract": "hia-htmdoc-extraction",
+          "path": "ProfileCard.htmdoc.json"
+        }
+      ]
+    },
+    {
+      "id": "artifact:cssdoc:bridge",
+      "kind": "extraction-artifact",
+      "path": "ProfileCard.cssdoc.json",
+      "language": "json",
+      "role": "generated",
+      "contractRefs": [
+        {
+          "contract": "hia-cssdoc-extraction",
+          "path": "ProfileCard.cssdoc.json"
+        }
+      ]
+    },
+    {
+      "id": "artifact:hia:document",
+      "kind": "extraction-artifact",
+      "path": "ProfileCard.hia.json",
+      "language": "json",
+      "role": "generated",
+      "contractRefs": [
+        {
+          "contract": "hia-core-document",
+          "path": "ProfileCard.hia.json"
+        }
+      ]
+    },
+    {
+      "id": "artifact:vue-template:render",
+      "kind": "generated-js",
+      "path": "ProfileCard.template.js",
+      "language": "javascript",
+      "role": "generated"
+    },
+    {
+      "id": "artifact:vue-script:compiled",
+      "kind": "generated-js",
+      "path": "ProfileCard.script.js",
+      "language": "javascript",
+      "role": "generated"
+    },
+    {
+      "id": "artifact:vue-style:compiled",
+      "kind": "generated-css",
+      "path": "ProfileCard.style.css",
+      "language": "css",
+      "role": "generated"
+    }
+  ],
+  "sources": [
+    {
+      "id": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
+      "kind": "framework-source",
+      "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+      "language": "vue",
+      "role": "original",
+      "sourcesContentPolicy": "none"
+    }
+  ],
+  "sourceMaps": [
+    {
+      "id": "sourcemap:vue-template",
+      "kind": "ordinary-source-map",
+      "path": "ProfileCard.template.js.map",
+      "language": "javascript",
+      "mapsFrom": "source:vue:profilecard-template-js",
+      "mapsTo": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue"
+    },
+    {
+      "id": "sourcemap:vue-script",
+      "kind": "ordinary-source-map",
+      "path": "ProfileCard.script.js.map",
+      "language": "javascript",
+      "mapsFrom": "source:vue:profilecard-script-js",
+      "mapsTo": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue"
+    },
+    {
+      "id": "sourcemap:vue-style",
+      "kind": "ordinary-source-map",
+      "path": "ProfileCard.style.css.map",
+      "language": "css",
+      "mapsFrom": "source:vue:profilecard-style-css",
+      "mapsTo": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue"
+    }
+  ],
+  "chains": [
+    {
+      "id": "chain:vue-sfc:document",
+      "stages": [
+        {
+          "from": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
+          "to": "artifact:vue-template:render",
+          "transform": "@vue/compiler-sfc:compileTemplate",
+          "sourceMap": "sourcemap:vue-template",
+          "linkage": [
+            "entry:component-profilecard",
+            "entry:slot-profilecard-actions",
+            "entry:stylehook-profilecard-profile-card",
+            "entry:expose-profilecard-formatuserlabel",
+            "entry:event-profilecard-select",
+            "entry:selector-profilecard-profile-card",
+            "entry:cssprop-profilecard--profile-card-accent"
+          ]
+        },
+        {
+          "from": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
+          "to": "artifact:vue-style:compiled",
+          "transform": "@vue/compiler-sfc:compileStyle",
+          "sourceMap": "sourcemap:vue-style",
+          "linkage": [
+            "entry:selector-profilecard-profile-card",
+            "entry:cssprop-profilecard--profile-card-accent"
+          ]
+        },
+        {
+          "from": "artifact:vuedoc:extraction",
+          "to": "artifact:hia:document",
+          "transform": "vuedoc-to-hia-core",
+          "sourceMap": null,
+          "linkage": [
+            "entry:component-profilecard",
+            "entry:slot-profilecard-actions",
+            "entry:stylehook-profilecard-profile-card",
+            "entry:expose-profilecard-formatuserlabel",
+            "entry:event-profilecard-select",
+            "entry:selector-profilecard-profile-card",
+            "entry:cssprop-profilecard--profile-card-accent"
+          ]
+        }
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "id": "entry:component-profilecard",
+      "kind": "symbol",
+      "symbolKind": "vue-component",
+      "symbolId": "component:ProfileCard",
+      "annotation": {
+        "tag": "component",
+        "value": "ProfileCard Profile card Vue SFC component."
+      },
+      "sourceRefs": [
+        {
+          "sourceId": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
+          "range": {
+            "start": {
+              "line": 1,
+              "column": 12
+            },
+            "end": {
+              "line": 11,
+              "column": 2
+            }
+          },
+          "rangeSource": "vue-sfc-parser",
+          "confidence": "medium"
+        }
+      ],
+      "artifactRefs": [
+        {
+          "artifactId": "artifact:vue-template:render",
+          "selector": "[data-component=\"ProfileCard\"]",
+          "rangeSource": "source-map",
+          "confidence": "medium"
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "entry:slot-profilecard-actions",
+      "kind": "symbol",
+      "symbolKind": "html-slot",
+      "symbolId": "slot:profilecard:actions",
+      "annotation": {
+        "tag": "slot",
+        "value": "actions Optional action controls rendered by the parent app."
+      },
+      "sourceRefs": [
+        {
+          "sourceId": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
+          "range": {
+            "start": {
+              "line": 1,
+              "column": 12
+            },
+            "end": {
+              "line": 11,
+              "column": 2
+            }
+          },
+          "rangeSource": "vue-sfc-parser",
+          "confidence": "medium"
+        }
+      ],
+      "artifactRefs": [
+        {
+          "artifactId": "artifact:vue-template:render",
+          "selector": null,
+          "rangeSource": "source-map",
+          "confidence": "medium"
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "entry:stylehook-profilecard-profile-card",
+      "kind": "symbol",
+      "symbolKind": "html-style-hook",
+      "symbolId": "stylehook:profilecard:profile-card",
+      "annotation": {
+        "tag": "stylehook",
+        "value": ".profile-card Root element style hook shared with CSSDoc."
+      },
+      "sourceRefs": [
+        {
+          "sourceId": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
+          "range": {
+            "start": {
+              "line": 1,
+              "column": 12
+            },
+            "end": {
+              "line": 11,
+              "column": 2
+            }
+          },
+          "rangeSource": "vue-sfc-parser",
+          "confidence": "medium"
+        }
+      ],
+      "artifactRefs": [
+        {
+          "artifactId": "artifact:vue-template:render",
+          "selector": null,
+          "rangeSource": "source-map",
+          "confidence": "medium"
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "entry:expose-profilecard-formatuserlabel",
+      "kind": "symbol",
+      "symbolKind": "vue-exposed-api",
+      "symbolId": "expose:profilecard:formatuserlabel",
+      "annotation": {
+        "tag": "expose",
+        "value": "formatUserLabel Public helper used by the template render path."
+      },
+      "sourceRefs": [
+        {
+          "sourceId": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
+          "range": {
+            "start": {
+              "line": 13,
+              "column": 16
+            },
+            "end": {
+              "line": 30,
+              "column": 2
+            }
+          },
+          "rangeSource": "vue-sfc-parser",
+          "confidence": "medium"
+        }
+      ],
+      "artifactRefs": [
+        {
+          "artifactId": "artifact:vue-script:compiled",
+          "selector": null,
+          "rangeSource": "source-map",
+          "confidence": "medium"
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "entry:event-profilecard-select",
+      "kind": "symbol",
+      "symbolKind": "html-event",
+      "symbolId": "event:profilecard:select",
+      "annotation": {
+        "tag": "event",
+        "value": "select Emitted when the profile card is selected."
+      },
+      "sourceRefs": [
+        {
+          "sourceId": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
+          "range": {
+            "start": {
+              "line": 13,
+              "column": 16
+            },
+            "end": {
+              "line": 30,
+              "column": 2
+            }
+          },
+          "rangeSource": "vue-sfc-parser",
+          "confidence": "medium"
+        }
+      ],
+      "artifactRefs": [
+        {
+          "artifactId": "artifact:vue-template:render",
+          "selector": null,
+          "rangeSource": "source-map",
+          "confidence": "medium"
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "entry:selector-profilecard-profile-card",
+      "kind": "symbol",
+      "symbolKind": "css-selector",
+      "symbolId": "selector:profilecard:profile-card",
+      "annotation": {
+        "tag": "selector",
+        "value": ".profile-card Public selector exposed by the component root."
+      },
+      "sourceRefs": [
+        {
+          "sourceId": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
+          "range": {
+            "start": {
+              "line": 32,
+              "column": 16
+            },
+            "end": {
+              "line": 43,
+              "column": 2
+            }
+          },
+          "rangeSource": "vue-sfc-parser",
+          "confidence": "medium"
+        }
+      ],
+      "artifactRefs": [
+        {
+          "artifactId": "artifact:vue-style:compiled",
+          "selector": ".profile-card",
+          "rangeSource": "source-map",
+          "confidence": "medium"
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "entry:cssprop-profilecard--profile-card-accent",
+      "kind": "symbol",
+      "symbolKind": "css-custom-property",
+      "symbolId": "cssprop:profilecard:-profile-card-accent",
+      "annotation": {
+        "tag": "cssprop",
+        "value": "--profile-card-accent Accent color consumed by the card border."
+      },
+      "sourceRefs": [
+        {
+          "sourceId": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
+          "range": {
+            "start": {
+              "line": 32,
+              "column": 16
+            },
+            "end": {
+              "line": 43,
+              "column": 2
+            }
+          },
+          "rangeSource": "vue-sfc-parser",
+          "confidence": "medium"
+        }
+      ],
+      "artifactRefs": [
+        {
+          "artifactId": "artifact:vue-style:compiled",
+          "selector": null,
+          "rangeSource": "source-map",
+          "confidence": "medium"
+        }
+      ],
+      "diagnostics": []
+    }
+  ],
+  "privacy": {
+    "sourcesContentPolicy": "none",
+    "allowAbsolutePaths": false,
+    "allowUncPaths": false,
+    "allowPathTraversal": false,
+    "releaseGate": {
+      "requireExplicitEmbedOptIn": true,
+      "failOnUnsafePath": true,
+      "failOnUnexpectedSourcesContent": true
+    }
+  },
+  "diagnostics": [
+    {
+      "code": "VUE_SFC_BRIDGE_SPIKE",
+      "severity": "info",
+      "message": "Vue SFC P1 is modeled as a framework bridge; Vue-specific semantics stay out of HTMDoc/CSSDoc core.",
+      "data": {
+        "bridgeBoundary": "framework-adapter"
+      }
+    }
+  ]
+}

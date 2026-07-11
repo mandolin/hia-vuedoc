@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue"
+  ],
+  "names": [],
+  "mappings": ";AAgCA;;;;EAIE;AACF;EACE,8BAA8B;EAC9B,4CAA4C;EAC5C,gBAAgB;AAClB",
+  "file": "ProfileCard.vue"
+}

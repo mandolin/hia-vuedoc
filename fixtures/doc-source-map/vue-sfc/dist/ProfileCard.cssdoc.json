@@ -1,0 +1,182 @@
+{
+  "contract": "hia-cssdoc-extraction",
+  "contractVersion": "0.1.0-draft",
+  "producer": {
+    "name": "@hia-doc/vue-sfc-bridge",
+    "version": "0.0.0"
+  },
+  "profile": {
+    "name": "vue-sfc-cssdoc-bridge",
+    "version": "0.1.0-draft"
+  },
+  "source": {
+    "kind": "vue-style",
+    "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue"
+  },
+  "symbols": [
+    {
+      "id": "selector:profilecard:profile-card",
+      "kind": "css-selector",
+      "name": ".profile-card",
+      "parentId": "component:ProfileCard",
+      "summary": "Public selector exposed by the component root.",
+      "source": {
+        "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+        "range": {
+          "start": {
+            "line": 32,
+            "column": 16
+          },
+          "end": {
+            "line": 43,
+            "column": 2
+          }
+        },
+        "rangeSource": "vue-sfc-parser",
+        "confidence": "medium"
+      },
+      "annotation": {
+        "tag": "selector",
+        "value": ".profile-card Public selector exposed by the component root.",
+        "source": {
+          "blockId": "block:style:0",
+          "blockType": "style",
+          "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+          "range": {
+            "start": {
+              "line": 32,
+              "column": 16
+            },
+            "end": {
+              "line": 43,
+              "column": 2
+            }
+          },
+          "offset": 15
+        }
+      },
+      "metadata": {
+        "bridge": "vue-sfc-cssdoc",
+        "styleArtifact": "ProfileCard.style.css"
+      }
+    },
+    {
+      "id": "cssprop:profilecard:-profile-card-accent",
+      "kind": "css-custom-property",
+      "name": "--profile-card-accent",
+      "parentId": "component:ProfileCard",
+      "summary": "Accent color consumed by the card border.",
+      "source": {
+        "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+        "range": {
+          "start": {
+            "line": 32,
+            "column": 16
+          },
+          "end": {
+            "line": 43,
+            "column": 2
+          }
+        },
+        "rangeSource": "vue-sfc-parser",
+        "confidence": "medium"
+      },
+      "annotation": {
+        "tag": "cssprop",
+        "value": "--profile-card-accent Accent color consumed by the card border.",
+        "source": {
+          "blockId": "block:style:0",
+          "blockType": "style",
+          "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+          "range": {
+            "start": {
+              "line": 32,
+              "column": 16
+            },
+            "end": {
+              "line": 43,
+              "column": 2
+            }
+          },
+          "offset": 15
+        }
+      },
+      "metadata": {
+        "bridge": "vue-sfc-cssdoc",
+        "styleArtifact": "ProfileCard.style.css"
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "tag": "component",
+      "value": "ProfileCard Scoped styles for the Vue profile card.",
+      "source": {
+        "blockId": "block:style:0",
+        "blockType": "style",
+        "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+        "range": {
+          "start": {
+            "line": 32,
+            "column": 16
+          },
+          "end": {
+            "line": 43,
+            "column": 2
+          }
+        },
+        "offset": 15
+      }
+    },
+    {
+      "tag": "selector",
+      "value": ".profile-card Public selector exposed by the component root.",
+      "source": {
+        "blockId": "block:style:0",
+        "blockType": "style",
+        "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+        "range": {
+          "start": {
+            "line": 32,
+            "column": 16
+          },
+          "end": {
+            "line": 43,
+            "column": 2
+          }
+        },
+        "offset": 15
+      }
+    },
+    {
+      "tag": "cssprop",
+      "value": "--profile-card-accent Accent color consumed by the card border.",
+      "source": {
+        "blockId": "block:style:0",
+        "blockType": "style",
+        "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+        "range": {
+          "start": {
+            "line": 32,
+            "column": 16
+          },
+          "end": {
+            "line": 43,
+            "column": 2
+          }
+        },
+        "offset": 15
+      }
+    }
+  ],
+  "diagnostics": [],
+  "sourceMap": {
+    "kind": "hia-doc-source-map-ref",
+    "href": "ProfileCard.docmap.json",
+    "sourcesContentPolicy": "none"
+  },
+  "metadata": {
+    "sourceContract": "hia-vuedoc-extraction",
+    "bridgeBoundary": "framework-adapter"
+  }
+}

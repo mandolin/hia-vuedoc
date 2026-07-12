@@ -1,0 +1,23 @@
+{
+  "name": "@hia-doc/vuedoc-producer",
+  "version": "0.0.0",
+  "description": "Documentation producer adapter for HIA VueDoc Vue SFC artifacts.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.mjs",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@hia-doc/vue-sfc-bridge": "0.0.0",
+    "@hia-doc/vue-sfc-doc-source-map": "0.0.0",
+    "@hia-doc/vue-sfc-extractor": "0.0.0",
+    "@hia-doc/vuedoc-spec": "0.0.0"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

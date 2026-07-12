@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { extractVueSfc, compileVueSfc } from "../packages/vue-sfc-extractor/src/index.mjs";
 import { vueDocToCssExtraction, vueDocToHiaDocument, vueDocToHtmlExtraction } from "../packages/vue-sfc-bridge/src/index.mjs";
 import { createVueSfcDocSourceMap } from "../packages/vue-sfc-doc-source-map/src/index.mjs";
+import { vuedocProducer } from "../packages/vuedoc-producer/src/index.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fixturePath = "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue";
@@ -60,4 +61,47 @@ describe("Vue SFC bridge", () => {
     assert.equal(docMap.contract, "doc-source-map");
     assert.ok(docMap.sourceMaps.length >= 2);
   });
+
+  it("runs the VueDoc producer adapter from a documentation producer request", async () => {
+    const outputDirectory = path.join(repositoryRoot, "fixtures", "doc-source-map", "vue-sfc", "producer-out");
+    await fs.rm(outputDirectory, { recursive: true, force: true });
+
+    try {
+      const result = await vuedocProducer.produce({
+        workspaceRoot: repositoryRoot,
+        outputDirectory,
+        inputs: [
+          {
+            kind: "vue-sfc",
+            path: fixturePath,
+            language: "vue"
+          }
+        ],
+        options: {
+          emitDocSourceMap: true,
+          sourcesContentPolicy: "none",
+          writeResultManifest: true
+        }
+      });
+
+      assert.equal(result.contract, "documentation-producer-result");
+      assert.equal(result.status, "success");
+      assert.ok(result.artifacts.some((artifact) => artifact.kind === "vuedoc-extraction"));
+      assert.ok(result.artifacts.some((artifact) => artifact.kind === "htmdoc-extraction"));
+      assert.ok(result.artifacts.some((artifact) => artifact.kind === "cssdoc-extraction"));
+      assert.ok(result.artifacts.some((artifact) => artifact.kind === "doc-source-map"));
+      assert.ok(await fileExists(path.join(outputDirectory, "vuedoc.producer-result.json")));
+    } finally {
+      await fs.rm(outputDirectory, { recursive: true, force: true });
+    }
+  });
 });
+
+async function fileExists(filePath) {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}

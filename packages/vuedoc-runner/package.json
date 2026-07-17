@@ -1,0 +1,25 @@
+{
+  "name": "@hia-doc/vuedoc-runner",
+  "version": "0.0.0",
+  "description": "Standalone runner and CLI for VueDoc Vue SFC documentation artifacts.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.mjs",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "bin": {
+    "hia-vuedoc": "./src/cli.mjs",
+    "vuedoc": "./src/cli.mjs"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "dependencies": {
+    "@hia-doc/vuedoc-producer": "0.0.0"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

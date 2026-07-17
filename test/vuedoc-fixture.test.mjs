@@ -1,5 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,6 +9,12 @@ import { extractVueSfc, compileVueSfc } from "../packages/vue-sfc-extractor/src/
 import { vueDocToCssExtraction, vueDocToHiaDocument, vueDocToHtmlExtraction } from "../packages/vue-sfc-bridge/src/index.mjs";
 import { createVueSfcDocSourceMap } from "../packages/vue-sfc-doc-source-map/src/index.mjs";
 import { vuedocProducer } from "../packages/vuedoc-producer/src/index.mjs";
+import {
+  loadVueDocRunnerConfig,
+  runVueDocRunner,
+  VUEDOC_RUNNER_CONFIG_CONTRACT,
+  VUEDOC_RUNNER_CONFIG_VERSION
+} from "../packages/vuedoc-runner/src/index.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fixturePath = "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue";
@@ -93,6 +100,55 @@ describe("Vue SFC bridge", () => {
       assert.ok(await fileExists(path.join(outputDirectory, "vuedoc.producer-result.json")));
     } finally {
       await fs.rm(outputDirectory, { recursive: true, force: true });
+    }
+  });
+
+  it("runs the standalone VueDoc runner from config and CLI surfaces", async () => {
+    const outputDirectory = path.join(repositoryRoot, "fixtures", "doc-source-map", "vue-sfc", "runner-out");
+    const configPath = path.join(repositoryRoot, "vuedoc-runner.fixture.config.json");
+    await fs.rm(outputDirectory, { recursive: true, force: true });
+
+    try {
+      await fs.writeFile(configPath, `${JSON.stringify({
+        contract: VUEDOC_RUNNER_CONFIG_CONTRACT,
+        contractVersion: VUEDOC_RUNNER_CONFIG_VERSION,
+        workspaceRoot: ".",
+        outputDirectory: "fixtures/doc-source-map/vue-sfc/runner-out",
+        inputs: [
+          {
+            kind: "vue-sfc",
+            path: fixturePath,
+            language: "vue"
+          }
+        ],
+        options: {
+          emitDocSourceMap: true,
+          sourcesContentPolicy: "none",
+          writeResultManifest: true
+        }
+      }, null, 2)}\n`, "utf8");
+
+      const config = await loadVueDocRunnerConfig(configPath);
+      const result = await runVueDocRunner(config);
+      assert.equal(result.status, "success");
+      assert.ok(result.artifacts.some((artifact) => artifact.kind === "hia-document"));
+      assert.ok(await fileExists(path.join(outputDirectory, "vuedoc.producer-result.json")));
+
+      await fs.rm(outputDirectory, { recursive: true, force: true });
+      const cliResult = spawnSync(process.execPath, [
+        path.join(repositoryRoot, "packages", "vuedoc-runner", "src", "cli.mjs"),
+        "--config",
+        configPath
+      ], {
+        cwd: repositoryRoot,
+        encoding: "utf8"
+      });
+      assert.equal(cliResult.status, 0, cliResult.stderr);
+      assert.match(cliResult.stdout, /"status": "success"/);
+      assert.ok(await fileExists(path.join(outputDirectory, "vuedoc.producer-result.json")));
+    } finally {
+      await fs.rm(outputDirectory, { recursive: true, force: true });
+      await fs.rm(configPath, { force: true });
     }
   });
 });

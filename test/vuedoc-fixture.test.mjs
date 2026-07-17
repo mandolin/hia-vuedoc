@@ -29,7 +29,11 @@ describe("Vue SFC bridge", () => {
     assert.ok(artifact.symbols.some((symbol) => symbol.kind === "vue-component" && symbol.name === "ProfileCard"));
     assert.ok(artifact.symbols.some((symbol) => symbol.kind === "html-slot" && symbol.name === "actions"));
     assert.ok(artifact.symbols.some((symbol) => symbol.kind === "css-custom-property" && symbol.name === "--profile-card-accent"));
-    assert.ok(artifact.symbols.some((symbol) => symbol.kind === "vue-exposed-api" && symbol.name === "formatUserLabel"));
+    const exposedApi = artifact.symbols.find((symbol) => symbol.kind === "vue-exposed-api" && symbol.name === "formatUserLabel");
+    assert.equal(exposedApi?.metadata.macro, "defineExpose");
+    assert.equal(exposedApi?.metadata.localName, "formatUserLabel");
+    assert.equal(exposedApi?.source.rangeSource, "vue-compiler-macro");
+    assert.equal(artifact.metadata.scriptSetup.defineExpose[0].name, "formatUserLabel");
   });
 
   it("uses the official Vue compiler to produce template and style source maps", async () => {

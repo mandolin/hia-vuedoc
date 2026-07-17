@@ -48,7 +48,7 @@
           "column": 16
         },
         "end": {
-          "line": 30,
+          "line": 33,
           "column": 2
         }
       },
@@ -66,11 +66,11 @@
       "language": "css",
       "range": {
         "start": {
-          "line": 32,
+          "line": 35,
           "column": 16
         },
         "end": {
-          "line": 43,
+          "line": 46,
           "column": 2
         }
       },
@@ -143,26 +143,6 @@
       }
     },
     {
-      "tag": "expose",
-      "value": "formatUserLabel Public helper used by the template render path.",
-      "source": {
-        "blockId": "block:scriptSetup:0",
-        "blockType": "scriptSetup",
-        "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
-        "range": {
-          "start": {
-            "line": 13,
-            "column": 16
-          },
-          "end": {
-            "line": 30,
-            "column": 2
-          }
-        },
-        "offset": 15
-      }
-    },
-    {
       "tag": "event",
       "value": "select Emitted when the profile card is selected.",
       "source": {
@@ -175,7 +155,7 @@
             "column": 16
           },
           "end": {
-            "line": 30,
+            "line": 33,
             "column": 2
           }
         },
@@ -191,11 +171,11 @@
         "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
         "range": {
           "start": {
-            "line": 32,
+            "line": 35,
             "column": 16
           },
           "end": {
-            "line": 43,
+            "line": 46,
             "column": 2
           }
         },
@@ -211,11 +191,11 @@
         "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
         "range": {
           "start": {
-            "line": 32,
+            "line": 35,
             "column": 16
           },
           "end": {
-            "line": 43,
+            "line": 46,
             "column": 2
           }
         },
@@ -231,11 +211,11 @@
         "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
         "range": {
           "start": {
-            "line": 32,
+            "line": 35,
             "column": 16
           },
           "end": {
-            "line": 43,
+            "line": 46,
             "column": 2
           }
         },
@@ -393,54 +373,6 @@
       }
     },
     {
-      "id": "expose:profilecard:formatuserlabel",
-      "kind": "vue-exposed-api",
-      "name": "formatUserLabel",
-      "parentId": "component:ProfileCard",
-      "summary": "Public helper used by the template render path.",
-      "source": {
-        "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
-        "range": {
-          "start": {
-            "line": 13,
-            "column": 16
-          },
-          "end": {
-            "line": 30,
-            "column": 2
-          }
-        },
-        "rangeSource": "vue-sfc-parser",
-        "confidence": "medium"
-      },
-      "annotation": {
-        "tag": "expose",
-        "value": "formatUserLabel Public helper used by the template render path.",
-        "source": {
-          "blockId": "block:scriptSetup:0",
-          "blockType": "scriptSetup",
-          "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
-          "range": {
-            "start": {
-              "line": 13,
-              "column": 16
-            },
-            "end": {
-              "line": 30,
-              "column": 2
-            }
-          },
-          "offset": 15
-        }
-      },
-      "metadata": {
-        "bridgeTargets": [
-          "jsdoc"
-        ],
-        "vueTag": "expose"
-      }
-    },
-    {
       "id": "event:profilecard:select",
       "kind": "html-event",
       "name": "select",
@@ -454,7 +386,7 @@
             "column": 16
           },
           "end": {
-            "line": 30,
+            "line": 33,
             "column": 2
           }
         },
@@ -474,7 +406,7 @@
               "column": 16
             },
             "end": {
-              "line": 30,
+              "line": 33,
               "column": 2
             }
           },
@@ -498,11 +430,11 @@
         "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
         "range": {
           "start": {
-            "line": 32,
+            "line": 35,
             "column": 16
           },
           "end": {
-            "line": 43,
+            "line": 46,
             "column": 2
           }
         },
@@ -518,11 +450,11 @@
           "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
           "range": {
             "start": {
-              "line": 32,
+              "line": 35,
               "column": 16
             },
             "end": {
-              "line": 43,
+              "line": 46,
               "column": 2
             }
           },
@@ -546,11 +478,11 @@
         "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
         "range": {
           "start": {
-            "line": 32,
+            "line": 35,
             "column": 16
           },
           "end": {
-            "line": 43,
+            "line": 46,
             "column": 2
           }
         },
@@ -566,11 +498,11 @@
           "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
           "range": {
             "start": {
-              "line": 32,
+              "line": 35,
               "column": 16
             },
             "end": {
-              "line": 43,
+              "line": 46,
               "column": 2
             }
           },
@@ -583,6 +515,38 @@
         ],
         "vueTag": "cssprop"
       }
+    },
+    {
+      "id": "expose:profilecard:formatuserlabel",
+      "kind": "vue-exposed-api",
+      "name": "formatUserLabel",
+      "parentId": "component:ProfileCard",
+      "summary": "Exposed by defineExpose().",
+      "source": {
+        "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+        "range": {
+          "start": {
+            "line": 31,
+            "column": 3
+          },
+          "end": {
+            "line": 31,
+            "column": 18
+          }
+        },
+        "rangeSource": "vue-compiler-macro",
+        "confidence": "high"
+      },
+      "annotation": null,
+      "metadata": {
+        "bridgeTargets": [
+          "jsdoc",
+          "tsdoc"
+        ],
+        "vueTag": "expose",
+        "macro": "defineExpose",
+        "localName": "formatUserLabel"
+      }
     }
   ],
   "diagnostics": [],
@@ -594,6 +558,29 @@
       "hasScriptSetup": true,
       "styleCount": 1,
       "customBlockCount": 0
+    },
+    "scriptSetup": {
+      "defineExpose": [
+        {
+          "name": "formatUserLabel",
+          "localName": "formatUserLabel",
+          "source": {
+            "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",
+            "range": {
+              "start": {
+                "line": 31,
+                "column": 3
+              },
+              "end": {
+                "line": 31,
+                "column": 18
+              }
+            },
+            "rangeSource": "vue-compiler-macro",
+            "confidence": "high"
+          }
+        }
+      ]
     }
   }
 }

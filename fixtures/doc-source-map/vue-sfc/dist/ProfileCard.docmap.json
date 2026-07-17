@@ -131,10 +131,10 @@
             "entry:component-profilecard",
             "entry:slot-profilecard-actions",
             "entry:stylehook-profilecard-profile-card",
-            "entry:expose-profilecard-formatuserlabel",
             "entry:event-profilecard-select",
             "entry:selector-profilecard-profile-card",
-            "entry:cssprop-profilecard--profile-card-accent"
+            "entry:cssprop-profilecard--profile-card-accent",
+            "entry:expose-profilecard-formatuserlabel"
           ]
         },
         {
@@ -156,10 +156,10 @@
             "entry:component-profilecard",
             "entry:slot-profilecard-actions",
             "entry:stylehook-profilecard-profile-card",
-            "entry:expose-profilecard-formatuserlabel",
             "entry:event-profilecard-select",
             "entry:selector-profilecard-profile-card",
-            "entry:cssprop-profilecard--profile-card-accent"
+            "entry:cssprop-profilecard--profile-card-accent",
+            "entry:expose-profilecard-formatuserlabel"
           ]
         }
       ]
@@ -275,42 +275,6 @@
       "diagnostics": []
     },
     {
-      "id": "entry:expose-profilecard-formatuserlabel",
-      "kind": "symbol",
-      "symbolKind": "vue-exposed-api",
-      "symbolId": "expose:profilecard:formatuserlabel",
-      "annotation": {
-        "tag": "expose",
-        "value": "formatUserLabel Public helper used by the template render path."
-      },
-      "sourceRefs": [
-        {
-          "sourceId": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
-          "range": {
-            "start": {
-              "line": 13,
-              "column": 16
-            },
-            "end": {
-              "line": 30,
-              "column": 2
-            }
-          },
-          "rangeSource": "vue-sfc-parser",
-          "confidence": "medium"
-        }
-      ],
-      "artifactRefs": [
-        {
-          "artifactId": "artifact:vue-script:compiled",
-          "selector": null,
-          "rangeSource": "source-map",
-          "confidence": "medium"
-        }
-      ],
-      "diagnostics": []
-    },
-    {
       "id": "entry:event-profilecard-select",
       "kind": "symbol",
       "symbolKind": "html-event",
@@ -328,7 +292,7 @@
               "column": 16
             },
             "end": {
-              "line": 30,
+              "line": 33,
               "column": 2
             }
           },
@@ -360,11 +324,11 @@
           "sourceId": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
           "range": {
             "start": {
-              "line": 32,
+              "line": 35,
               "column": 16
             },
             "end": {
-              "line": 43,
+              "line": 46,
               "column": 2
             }
           },
@@ -396,11 +360,11 @@
           "sourceId": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
           "range": {
             "start": {
-              "line": 32,
+              "line": 35,
               "column": 16
             },
             "end": {
-              "line": 43,
+              "line": 46,
               "column": 2
             }
           },
@@ -411,6 +375,39 @@
       "artifactRefs": [
         {
           "artifactId": "artifact:vue-style:compiled",
+          "selector": null,
+          "rangeSource": "source-map",
+          "confidence": "medium"
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "id": "entry:expose-profilecard-formatuserlabel",
+      "kind": "symbol",
+      "symbolKind": "vue-exposed-api",
+      "symbolId": "expose:profilecard:formatuserlabel",
+      "annotation": null,
+      "sourceRefs": [
+        {
+          "sourceId": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
+          "range": {
+            "start": {
+              "line": 31,
+              "column": 3
+            },
+            "end": {
+              "line": 31,
+              "column": 18
+            }
+          },
+          "rangeSource": "vue-sfc-parser",
+          "confidence": "high"
+        }
+      ],
+      "artifactRefs": [
+        {
+          "artifactId": "artifact:vue-script:compiled",
           "selector": null,
           "rangeSource": "source-map",
           "confidence": "medium"

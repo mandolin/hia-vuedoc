@@ -194,7 +194,9 @@ function mapVueSymbol(symbol) {
       vuedoc: {
         vueSymbolKind: symbol.kind,
         annotation: symbol.annotation ?? null,
-        bridgeTargets: symbol.metadata?.bridgeTargets ?? []
+        bridgeTargets: symbol.metadata?.bridgeTargets ?? [],
+        macro: symbol.metadata?.macro ?? null,
+        localName: symbol.metadata?.localName ?? null
       }
     }
   };

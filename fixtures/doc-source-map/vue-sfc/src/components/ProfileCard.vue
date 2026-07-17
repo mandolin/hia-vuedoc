@@ -12,7 +12,6 @@
 
 <script setup>
 /**
- * @expose formatUserLabel Public helper used by the template render path.
  * @event select Emitted when the profile card is selected.
  */
 const props = defineProps({
@@ -27,6 +26,10 @@ const emit = defineEmits(["select"]);
 function formatUserLabel(user) {
   return user.displayName || user.name;
 }
+
+defineExpose({
+  formatUserLabel
+});
 </script>
 
 <style scoped>

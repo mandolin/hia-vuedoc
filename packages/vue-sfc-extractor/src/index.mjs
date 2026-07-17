@@ -20,7 +20,8 @@ export function extractVueSfc(sourceText, options = {}) {
   const blocks = collectBlocks(descriptor, sourcePath);
   const annotations = blocks.flatMap((block) => extractAnnotationsFromBlock(block, sourceText));
   const componentName = findComponentName(annotations) ?? componentNameFromPath(sourcePath);
-  const symbols = createSymbols(annotations, componentName, sourcePath);
+  const scriptSetupExposes = collectScriptSetupExposes(descriptor.scriptSetup, sourcePath);
+  const symbols = createSymbols(annotations, componentName, sourcePath, scriptSetupExposes);
 
   return {
     contract: VUEDOC_EXTRACTION_CONTRACT,
@@ -58,6 +59,9 @@ export function extractVueSfc(sourceText, options = {}) {
         hasScriptSetup: Boolean(descriptor.scriptSetup),
         styleCount: descriptor.styles.length,
         customBlockCount: descriptor.customBlocks.length
+      },
+      scriptSetup: {
+        defineExpose: scriptSetupExposes
       }
     }
   };
@@ -211,7 +215,7 @@ function parseAnnotationBlock(body, block, offset) {
   return annotations;
 }
 
-function createSymbols(annotations, componentName, sourcePath) {
+function createSymbols(annotations, componentName, sourcePath, scriptSetupExposes) {
   const componentId = `component:${componentName}`;
   const symbols = [];
   const componentAnnotation = annotations.find((annotation) => annotation.tag === "component");
@@ -253,7 +257,74 @@ function createSymbols(annotations, componentName, sourcePath) {
     });
   }
 
+  const existingExposeNames = new Set(symbols.filter((symbol) => symbol.kind === "vue-exposed-api").map((symbol) => symbol.name));
+  for (const exposed of scriptSetupExposes) {
+    if (existingExposeNames.has(exposed.name)) {
+      continue;
+    }
+    symbols.push({
+      id: `expose:${slug(componentName)}:${slug(exposed.name)}`,
+      kind: "vue-exposed-api",
+      name: exposed.name,
+      parentId: componentId,
+      summary: `Exposed by defineExpose().`,
+      source: {
+        path: sourcePath,
+        range: exposed.source.range,
+        rangeSource: "vue-compiler-macro",
+        confidence: "high"
+      },
+      annotation: null,
+      metadata: {
+        bridgeTargets: ["jsdoc", "tsdoc"],
+        vueTag: "expose",
+        macro: "defineExpose",
+        localName: exposed.localName
+      }
+    });
+  }
+
   return symbols;
+}
+
+function collectScriptSetupExposes(scriptSetupBlock, sourcePath) {
+  if (!scriptSetupBlock) {
+    return [];
+  }
+  const exposes = [];
+  for (const match of scriptSetupBlock.content.matchAll(/\bdefineExpose\s*\(\s*\{([\s\S]*?)\}\s*\)/gu)) {
+    const body = match[1] ?? "";
+    const bodyStart = (match.index ?? 0) + match[0].indexOf(body);
+    for (const property of parseObjectExposeProperties(body)) {
+      exposes.push({
+        name: property.exposedName,
+        localName: property.localName,
+        source: {
+          path: sourcePath,
+          range: rangeForContentOffset(scriptSetupBlock, bodyStart + property.offset, bodyStart + property.offset + property.length),
+          rangeSource: "vue-compiler-macro",
+          confidence: "high"
+        }
+      });
+    }
+  }
+  return exposes;
+}
+
+function parseObjectExposeProperties(body) {
+  const properties = [];
+  const propertyPattern = /(?:^|,)\s*([A-Za-z_$][\w$]*)(?:\s*:\s*([A-Za-z_$][\w$]*))?/gu;
+  for (const match of body.matchAll(propertyPattern)) {
+    const exposedName = match[1];
+    const localName = match[2] ?? exposedName;
+    properties.push({
+      exposedName,
+      localName,
+      offset: (match.index ?? 0) + match[0].indexOf(exposedName),
+      length: exposedName.length
+    });
+  }
+  return properties;
 }
 
 function sourceForAnnotation(annotation, sourcePath) {
@@ -305,6 +376,25 @@ function rangeFromLoc(loc) {
       line: loc.end.line,
       column: loc.end.column + 1
     }
+  };
+}
+
+function rangeForContentOffset(block, startOffset, endOffset) {
+  return {
+    start: positionForContentOffset(block, startOffset),
+    end: positionForContentOffset(block, endOffset)
+  };
+}
+
+function positionForContentOffset(block, offset) {
+  const before = block.content.slice(0, Math.max(offset, 0));
+  const lines = before.split(/\r?\n/);
+  const lineOffset = lines.length - 1;
+  return {
+    line: block.loc.start.line + lineOffset,
+    column: lineOffset === 0
+      ? block.loc.start.column + lines.at(-1).length + 1
+      : lines.at(-1).length + 1
   };
 }
 

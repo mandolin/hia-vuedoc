@@ -10,6 +10,10 @@
     "name": "vuedoc",
     "version": "0.1.0-draft"
   },
+  "defaultLocale": "en",
+  "locales": [
+    "en"
+  ],
   "source": {
     "kind": "vue-sfc",
     "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue",

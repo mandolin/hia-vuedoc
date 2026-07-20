@@ -9,6 +9,10 @@
     "name": "vue-sfc-htmdoc-bridge",
     "version": "0.1.0-draft"
   },
+  "defaultLocale": "en",
+  "locales": [
+    "en"
+  ],
   "source": {
     "kind": "vue-template",
     "path": "fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue"

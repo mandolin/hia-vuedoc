@@ -36,6 +36,30 @@ describe("Vue SFC bridge", () => {
     assert.equal(artifact.metadata.scriptSetup.defineExpose[0].name, "formatUserLabel");
   });
 
+  it("maps @lang and inline <lang> through VueDoc bridge artifacts", () => {
+    const artifact = extractVueSfc(`<template>
+  <!--
+    @component GreetingCard
+    @description Greets a <lang><zh-CN>用户</zh-CN><en>user</en></lang>.
+    @lang zh-CN 问候一个用户。
+    @slot actions <l><zh-CN>操作区域</zh-CN><en>action area</en></l>
+  -->
+  <section><slot name="actions" /></section>
+</template>`, { path: "src/GreetingCard.vue" });
+    const htmDoc = vueDocToHtmlExtraction(artifact);
+    const hia = vueDocToHiaDocument(artifact);
+    const component = hia.symbols.find((symbol) => symbol.kind === "html-component");
+    const slot = hia.symbols.find((symbol) => symbol.kind === "html-slot");
+
+    assert.ok(artifact.locales.includes("zh-CN"));
+    assert.ok(htmDoc.locales.includes("zh-CN"));
+    assert.ok(hia.locales.includes("zh-CN"));
+    assert.equal(component.i18n.fields.description.localizedText["zh-CN"], "问候一个用户。");
+    assert.equal(component.i18n.fields.description.localizedText.en, "Greets a user.");
+    assert.equal(slot.i18n.fields.description.localizedText["zh-CN"], "操作区域");
+    assert.equal(slot.i18n.fields.description.localizedText.en, "action area");
+  });
+
   it("uses the official Vue compiler to produce template and style source maps", async () => {
     const sourceText = await fs.readFile(path.join(repositoryRoot, fixturePath), "utf8");
     const compiled = compileVueSfc(sourceText, { path: fixturePath, id: "profile-card" });

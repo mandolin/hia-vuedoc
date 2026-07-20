@@ -8,9 +8,13 @@ import {
 } from "@hia-doc/vuedoc-spec";
 
 const DEFAULT_COMPONENT_ID = "hia-vuedoc-sfc";
+const DEFAULT_LOCALE = "en";
+const HIA_TEXT_I18N_MODEL = "hia-text-i18n";
+const HIA_TEXT_I18N_MODEL_VERSION = "0.2.0";
 
 export function extractVueSfc(sourceText, options = {}) {
   const sourcePath = normalizePath(options.path ?? "src/Component.vue");
+  const defaultLocale = normalizeLocale(options.defaultLocale) || DEFAULT_LOCALE;
   const filename = options.filename ?? sourcePath;
   const parsed = parse(sourceText, {
     filename,
@@ -21,7 +25,7 @@ export function extractVueSfc(sourceText, options = {}) {
   const annotations = blocks.flatMap((block) => extractAnnotationsFromBlock(block, sourceText));
   const componentName = findComponentName(annotations) ?? componentNameFromPath(sourcePath);
   const scriptSetupExposes = collectScriptSetupExposes(descriptor.scriptSetup, sourcePath);
-  const symbols = createSymbols(annotations, componentName, sourcePath, scriptSetupExposes);
+  const symbols = createSymbols(annotations, componentName, sourcePath, scriptSetupExposes, { defaultLocale });
 
   return {
     contract: VUEDOC_EXTRACTION_CONTRACT,
@@ -35,6 +39,8 @@ export function extractVueSfc(sourceText, options = {}) {
       name: "vuedoc",
       version: VUEDOC_PROFILE_VERSION
     },
+    defaultLocale,
+    locales: collectLocales([defaultLocale, ...symbols.flatMap((symbol) => symbol.i18n?.locales ?? [])]),
     source: {
       kind: "vue-sfc",
       path: sourcePath,
@@ -215,18 +221,21 @@ function parseAnnotationBlock(body, block, offset) {
   return annotations;
 }
 
-function createSymbols(annotations, componentName, sourcePath, scriptSetupExposes) {
+function createSymbols(annotations, componentName, sourcePath, scriptSetupExposes, options) {
   const componentId = `component:${componentName}`;
   const symbols = [];
   const componentAnnotation = annotations.find((annotation) => annotation.tag === "component");
+  const componentSummary = descriptionForComponent(annotations, componentAnnotation) ?? "Vue SFC component.";
+  const componentI18n = createDescriptionI18n(componentSummary, annotations, options.defaultLocale, "vuedoc.component");
   symbols.push({
     id: componentId,
     kind: "vue-component",
     bridgeKinds: ["html-component"],
     name: firstWord(componentAnnotation?.value) ?? componentName,
-    summary: restWords(componentAnnotation?.value) ?? "Vue SFC component.",
+    summary: componentI18n?.fields.description?.defaultText ?? componentSummary,
     source: sourceForAnnotation(componentAnnotation, sourcePath),
     annotation: componentAnnotation ?? null,
+    ...(componentI18n ? { i18n: componentI18n } : {}),
     metadata: {
       bridgeTargets: ["htmdoc", "cssdoc", "jsdoc"],
       componentName
@@ -242,14 +251,17 @@ function createSymbols(annotations, componentName, sourcePath, scriptSetupExpose
     if (!kind) {
       continue;
     }
+    const summary = restWords(annotation.value) ?? "";
+    const i18n = createDescriptionI18n(summary, [], options.defaultLocale, `vuedoc.${annotation.tag}`);
     symbols.push({
       id: `${annotation.tag}:${slug(componentName)}:${slug(name)}`,
       kind,
       name,
       parentId: componentId,
-      summary: restWords(annotation.value) ?? "",
+      summary: i18n?.fields.description?.defaultText ?? summary,
       source: sourceForAnnotation(annotation, sourcePath),
       annotation,
+      ...(i18n ? { i18n } : {}),
       metadata: {
         bridgeTargets: bridgeTargetsForKind(kind),
         vueTag: annotation.tag
@@ -285,6 +297,175 @@ function createSymbols(annotations, componentName, sourcePath, scriptSetupExpose
   }
 
   return symbols;
+}
+
+function descriptionForComponent(annotations, componentAnnotation) {
+  const description = annotations.find((annotation) => annotation.tag === "description");
+  return description?.value || restWords(componentAnnotation?.value);
+}
+
+// 中文：把 VueDoc 的 `@lang` 与 inline `<lang>/<l>` 规整成 HIA field-level i18n。
+// English: Normalizes VueDoc `@lang` and inline `<lang>/<l>` into HIA field-level i18n.
+function createDescriptionI18n(defaultText, annotations, defaultLocale, source) {
+  const blocks = collectLangBlocks(annotations, "description", source);
+  const segments = parseInlineSegments(defaultText, "description");
+  if (blocks.length === 0 && segments.length === 0) {
+    return null;
+  }
+
+  const field = createTextField({
+    fieldPath: "description",
+    kind: "text",
+    defaultLocale,
+    defaultText,
+    blocks,
+    segments,
+    source
+  });
+
+  return {
+    enabled: true,
+    model: HIA_TEXT_I18N_MODEL,
+    modelVersion: HIA_TEXT_I18N_MODEL_VERSION,
+    defaultLocale,
+    locales: collectLocales([defaultLocale, ...Object.keys(field.localizedText)]),
+    fields: {
+      description: field
+    }
+  };
+}
+
+function collectLangBlocks(annotations, fieldPath, source) {
+  return annotations
+    .filter((annotation) => annotation.tag === "lang")
+    .map((annotation) => parseLangBlock(annotation.value, fieldPath, source))
+    .filter(Boolean);
+}
+
+function parseLangBlock(value, fieldPath, source) {
+  const match = /^(\S+)(?:\s+([\s\S]+))?$/.exec(String(value ?? "").trim());
+  const locale = normalizeLocale(match?.[1]);
+  const text = compactWhitespace(match?.[2] ?? "");
+  if (!locale || !text) {
+    return null;
+  }
+  return {
+    kind: "lang-block",
+    locale,
+    fieldPath,
+    text,
+    source,
+    rangeInComment: null
+  };
+}
+
+function createTextField(options) {
+  const localizedText = {};
+  const locales = collectLocales([
+    options.defaultLocale,
+    ...options.blocks.map((block) => block.locale),
+    ...options.segments.flatMap((segment) => Object.keys(segment.localized))
+  ]);
+
+  for (const locale of locales) {
+    const block = options.blocks.find((item) => item.locale === locale);
+    localizedText[locale] = block?.text ?? renderInlineText(options.defaultText, options.segments, locale, options.defaultLocale);
+  }
+
+  const defaultText = localizedText[options.defaultLocale] || firstLocalizedText(localizedText) || compactWhitespace(options.defaultText);
+
+  return {
+    fieldPath: options.fieldPath,
+    kind: options.kind,
+    defaultLocale: options.defaultLocale,
+    defaultText,
+    source: options.source,
+    localizedText,
+    ...(options.blocks.length > 0 ? { blocks: options.blocks } : {}),
+    ...(options.segments.length > 0 ? { segments: options.segments } : {}),
+    resolutions: Object.fromEntries(Object.keys(localizedText).map((locale) => [
+      locale,
+      {
+        requestedLocale: locale,
+        resolvedLocale: locale,
+        fallbackChain: fallbackChain(locale, options.defaultLocale),
+        usedFallback: false,
+        missing: false,
+        sourceKind: options.blocks.some((block) => block.locale === locale) ? "lang-block" : "default-text",
+        sourceLocale: locale,
+        source: options.source
+      }
+    ])),
+    missingLocales: []
+  };
+}
+
+function parseInlineSegments(text, fieldPath) {
+  const sourceText = String(text ?? "");
+  const segments = [];
+  const pattern = /<(lang|l)\b([^>]*)>([\s\S]*?)<\/\1>/g;
+  let match;
+  while ((match = pattern.exec(sourceText))) {
+    const localized = parseInlineLocalizedValues(match[3]);
+    if (Object.keys(localized).length === 0) {
+      continue;
+    }
+    const attributes = parseAttributes(match[2]);
+    segments.push({
+      kind: "lang-inline",
+      id: `${fieldPath}.${segments.length}`,
+      key: attributes.key ?? "",
+      path: attributes.path ?? "",
+      fieldPath,
+      raw: match[0],
+      localized,
+      rangeInField: {
+        start: match.index,
+        end: match.index + match[0].length
+      }
+    });
+  }
+  return segments;
+}
+
+function parseInlineLocalizedValues(innerText) {
+  const localized = {};
+  const pattern = /<([A-Za-z]{2,3}(?:[-_][A-Za-z0-9]{2,8})*)>([\s\S]*?)<\/\1>/g;
+  let match;
+  while ((match = pattern.exec(innerText || ""))) {
+    const locale = normalizeLocale(match[1]);
+    const text = compactWhitespace(match[2]);
+    if (locale && text) {
+      localized[locale] = text;
+    }
+  }
+  return localized;
+}
+
+function renderInlineText(text, segments, locale, defaultLocale) {
+  let rendered = compactWhitespace(text);
+  for (const segment of segments) {
+    rendered = rendered.replace(segment.raw, resolveInlineLocalizedText(segment.localized, locale, defaultLocale));
+  }
+  return rendered;
+}
+
+function resolveInlineLocalizedText(localized, locale, defaultLocale) {
+  return localized[locale]
+    ?? localized[getParentLocale(locale)]
+    ?? localized[defaultLocale]
+    ?? firstLocalizedText(localized)
+    ?? "";
+}
+
+function parseAttributes(rawAttributes) {
+  const attributes = {};
+  const pattern = /([A-Za-z_:][\w:.-]*)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
+  let match;
+  while ((match = pattern.exec(rawAttributes || ""))) {
+    attributes[match[1]] = match[2] || match[3] || "";
+  }
+  return attributes;
 }
 
 function collectScriptSetupExposes(scriptSetupBlock, sourcePath) {
@@ -433,4 +614,30 @@ function restWords(value) {
 
 function slug(value) {
   return String(value).trim().toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-|-$/g, "") || "unnamed";
+}
+
+function collectLocales(values) {
+  return [...new Set(values.map((value) => normalizeLocale(value)).filter(Boolean))];
+}
+
+function normalizeLocale(value) {
+  const locale = String(value ?? "").trim().replace(/_/g, "-");
+  return /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(locale) ? locale : "";
+}
+
+function getParentLocale(locale) {
+  return String(locale).split("-")[0] || locale;
+}
+
+function fallbackChain(locale, defaultLocale) {
+  const chain = collectLocales([locale, getParentLocale(locale), defaultLocale]);
+  return chain.length > 0 ? chain : [DEFAULT_LOCALE];
+}
+
+function firstLocalizedText(localizedText) {
+  return Object.values(localizedText).find((text) => typeof text === "string" && text.length > 0) ?? "";
+}
+
+function compactWhitespace(value) {
+  return String(value ?? "").replace(/\s+/g, " ").trim();
 }

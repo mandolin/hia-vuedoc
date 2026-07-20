@@ -7,6 +7,7 @@ const HIA_SOURCE_MODEL_VERSION = "0.2.0";
 export function vueDocToHtmlExtraction(vueArtifact, options = {}) {
   assertVueDocArtifact(vueArtifact);
   const templatePath = normalizePath(options.templatePath ?? vueArtifact.source.path);
+  const defaultLocale = options.defaultLocale ?? vueArtifact.defaultLocale ?? "en";
   const symbols = vueArtifact.symbols
     .filter((symbol) => symbol.kind === "vue-component" || symbol.kind.startsWith("html-"))
     .map((symbol) => ({
@@ -14,7 +15,7 @@ export function vueDocToHtmlExtraction(vueArtifact, options = {}) {
       kind: symbol.kind === "vue-component" ? "html-component" : symbol.kind,
       name: symbol.name,
       parentId: symbol.parentId,
-      summary: symbol.summary,
+      summary: symbol.i18n?.fields?.description?.defaultText ?? symbol.summary,
       source: {
         path: vueArtifact.source.path,
         range: symbol.source.range,
@@ -22,6 +23,7 @@ export function vueDocToHtmlExtraction(vueArtifact, options = {}) {
         confidence: symbol.source.confidence
       },
       annotation: symbol.annotation,
+      ...(symbol.i18n ? { i18n: symbol.i18n } : {}),
       metadata: {
         bridge: "vue-sfc-htmdoc",
         vueSymbolKind: symbol.kind,
@@ -40,6 +42,8 @@ export function vueDocToHtmlExtraction(vueArtifact, options = {}) {
       name: "vue-sfc-htmdoc-bridge",
       version: "0.1.0-draft"
     },
+    defaultLocale,
+    locales: collectDocumentLocales(options.locales, vueArtifact.locales, symbols, defaultLocale),
     source: {
       kind: "vue-template",
       path: vueArtifact.source.path
@@ -62,6 +66,7 @@ export function vueDocToHtmlExtraction(vueArtifact, options = {}) {
 export function vueDocToCssExtraction(vueArtifact, options = {}) {
   assertVueDocArtifact(vueArtifact);
   const stylePath = normalizePath(options.stylePath ?? vueArtifact.source.path);
+  const defaultLocale = options.defaultLocale ?? vueArtifact.defaultLocale ?? "en";
   const symbols = vueArtifact.symbols
     .filter((symbol) => symbol.kind.startsWith("css-"))
     .map((symbol) => ({
@@ -69,7 +74,7 @@ export function vueDocToCssExtraction(vueArtifact, options = {}) {
       kind: symbol.kind,
       name: symbol.name,
       parentId: symbol.parentId,
-      summary: symbol.summary,
+      summary: symbol.i18n?.fields?.description?.defaultText ?? symbol.summary,
       source: {
         path: vueArtifact.source.path,
         range: symbol.source.range,
@@ -77,6 +82,7 @@ export function vueDocToCssExtraction(vueArtifact, options = {}) {
         confidence: symbol.source.confidence
       },
       annotation: symbol.annotation,
+      ...(symbol.i18n ? { i18n: symbol.i18n } : {}),
       metadata: {
         bridge: "vue-sfc-cssdoc",
         styleArtifact: stylePath
@@ -94,6 +100,8 @@ export function vueDocToCssExtraction(vueArtifact, options = {}) {
       name: "vue-sfc-cssdoc-bridge",
       version: "0.1.0-draft"
     },
+    defaultLocale,
+    locales: collectDocumentLocales(options.locales, vueArtifact.locales, symbols, defaultLocale),
     source: {
       kind: "vue-style",
       path: vueArtifact.source.path
@@ -117,13 +125,14 @@ export function vueDocToHiaDocument(vueArtifact, options = {}) {
   assertVueDocArtifact(vueArtifact);
   const title = options.title ?? "Vue SFC Document";
   const symbols = vueArtifact.symbols.map((symbol) => mapVueSymbol(symbol));
+  const defaultLocale = options.defaultLocale ?? vueArtifact.defaultLocale ?? "en";
 
   return {
     schemaVersion: HIA_CORE_SCHEMA_VERSION,
     id: options.id ?? `vuedoc:${vueArtifact.source.path}`,
     title,
-    defaultLocale: options.defaultLocale ?? "en",
-    locales: options.locales ?? ["en"],
+    defaultLocale,
+    locales: collectDocumentLocales(options.locales, vueArtifact.locales, symbols, defaultLocale),
     nodes: [
       {
         id: "root",
@@ -163,12 +172,12 @@ export function assertVueDocArtifact(artifact) {
 }
 
 function mapVueSymbol(symbol) {
-  return {
+  const mapped = {
     id: symbol.id,
     name: symbol.name,
     kind: coreKindForSymbol(symbol),
     parentId: symbol.parentId,
-    summary: symbol.summary,
+    summary: symbol.i18n?.fields?.description?.defaultText ?? symbol.summary,
     source: {
       model: HIA_SOURCE_MODEL,
       modelVersion: HIA_SOURCE_MODEL_VERSION,
@@ -200,6 +209,10 @@ function mapVueSymbol(symbol) {
       }
     }
   };
+  if (symbol.i18n) {
+    mapped.i18n = symbol.i18n;
+  }
+  return mapped;
 }
 
 function coreKindForSymbol(symbol) {
@@ -215,4 +228,21 @@ function normalizePath(value) {
     throw new Error(`Unsafe Vue bridge path: ${value}`);
   }
   return normalized;
+}
+
+function collectDocumentLocales(optionLocales, artifactLocales, symbols, defaultLocale) {
+  const locales = [
+    defaultLocale,
+    ...(Array.isArray(optionLocales) ? optionLocales : []),
+    ...(Array.isArray(artifactLocales) ? artifactLocales : [])
+  ];
+  for (const symbol of symbols) {
+    locales.push(...(Array.isArray(symbol.i18n?.locales) ? symbol.i18n.locales : []));
+  }
+  return [...new Set(locales.map((locale) => normalizeLocale(locale)).filter(Boolean))];
+}
+
+function normalizeLocale(value) {
+  const locale = String(value ?? "").trim().replace(/_/g, "-");
+  return /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(locale) ? locale : "";
 }

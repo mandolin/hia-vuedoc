@@ -1,5 +1,12 @@
+/** @file @lang zh-CN Vue单文件组件的文档语义映射，列表引用和可选字段遵守中性契约。 @lang en Vue single-file-component documentation maps with list references and optional fields following the neutral contract. */
 import { VUEDOC_EXTRACTION_CONTRACT } from "@hia-doc/vuedoc-spec";
 
+/**
+ * @lang zh-CN 从已提取Vue工件和显式相对产物路径创建旧版映射；不读取普通map或源码正文。
+ * @lang en Creates a legacy map from an extracted Vue artifact and explicit relative output paths, without reading ordinary maps or source bodies.
+ * @param {object} options <lang><zh-CN>Vue工件、各文档路径及可选template/script/style和map路径。</zh-CN><en>Vue artifact, documentation paths and optional template/script/style/map paths.</en></lang>
+ * @returns {object} <lang><zh-CN>被动manifest；mapsTo始终为列表，缺注释/选择器省略。</zh-CN><en>Passive manifest with list-valued mapsTo and absent annotations/selectors omitted.</en></lang>
+ */
 export function createVueSfcDocSourceMap(options) {
   const {
     vueArtifact,
@@ -114,18 +121,17 @@ export function createVueSfcDocSourceMap(options) {
   };
 }
 
+/** @lang zh-CN 保留无注释符号但省略不存在的annotation字段。 @lang en Retains undocumented symbols while omitting absent annotation fields. */
 function createSymbolEntry(symbol) {
   return {
     id: entryIdForSymbol(symbol),
     kind: "symbol",
     symbolKind: symbol.kind,
     symbolId: symbol.id,
-    annotation: symbol.annotation
-      ? {
+    ...(symbol.annotation ? { annotation: {
           tag: symbol.annotation.tag,
           value: symbol.annotation.value
-        }
-      : null,
+        } } : {}),
     sourceRefs: [
       {
         sourceId: sourceIdForPath(symbol.source.path),
@@ -139,11 +145,12 @@ function createSymbolEntry(symbol) {
   };
 }
 
+/** @lang zh-CN 按符号领域选择产物引用，只在确有定位文本时写selector。 @lang en Selects the artifact by symbol domain and writes a selector only when location text exists. */
 function artifactRefForSymbol(symbol) {
   if (symbol.kind.startsWith("css-")) {
     return {
       artifactId: "artifact:vue-style:compiled",
-      selector: symbol.kind === "css-selector" ? symbol.name : null,
+      ...(symbol.kind === "css-selector" && symbol.name ? { selector: symbol.name } : {}),
       rangeSource: "source-map",
       confidence: "medium"
     };
@@ -151,14 +158,13 @@ function artifactRefForSymbol(symbol) {
   if (symbol.kind === "vue-exposed-api") {
     return {
       artifactId: "artifact:vue-script:compiled",
-      selector: null,
       rangeSource: "source-map",
       confidence: "medium"
     };
   }
   return {
     artifactId: "artifact:vue-template:render",
-    selector: symbol.kind === "vue-component" ? `[data-component="${symbol.name}"]` : null,
+    ...(symbol.kind === "vue-component" ? { selector: `[data-component="${symbol.name}"]` } : {}),
     rangeSource: "source-map",
     confidence: "medium"
   };
@@ -176,6 +182,7 @@ function artifact(id, kind, artifactPath, language, contract) {
   };
 }
 
+/** @lang zh-CN 构造普通map声明；一个原始源也必须使用mapsTo引用列表。 @lang en Constructs an ordinary-map declaration; even one original source requires a mapsTo reference list. */
 function sourceMap(id, mapPath, targetPath, sourceId, language) {
   if (!mapPath) {
     return null;
@@ -186,7 +193,7 @@ function sourceMap(id, mapPath, targetPath, sourceId, language) {
     path: normalizePath(mapPath),
     language,
     mapsFrom: sourceIdForPath(targetPath ?? mapPath),
-    mapsTo: sourceId
+    mapsTo: [sourceId]
   };
 }
 

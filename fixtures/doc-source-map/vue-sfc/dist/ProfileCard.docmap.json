@@ -99,7 +99,9 @@
       "path": "ProfileCard.template.js.map",
       "language": "javascript",
       "mapsFrom": "source:vue:profilecard-template-js",
-      "mapsTo": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue"
+      "mapsTo": [
+        "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue"
+      ]
     },
     {
       "id": "sourcemap:vue-script",
@@ -107,7 +109,9 @@
       "path": "ProfileCard.script.js.map",
       "language": "javascript",
       "mapsFrom": "source:vue:profilecard-script-js",
-      "mapsTo": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue"
+      "mapsTo": [
+        "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue"
+      ]
     },
     {
       "id": "sourcemap:vue-style",
@@ -115,7 +119,9 @@
       "path": "ProfileCard.style.css.map",
       "language": "css",
       "mapsFrom": "source:vue:profilecard-style-css",
-      "mapsTo": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue"
+      "mapsTo": [
+        "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue"
+      ]
     }
   ],
   "chains": [
@@ -231,7 +237,6 @@
       "artifactRefs": [
         {
           "artifactId": "artifact:vue-template:render",
-          "selector": null,
           "rangeSource": "source-map",
           "confidence": "medium"
         }
@@ -267,7 +272,6 @@
       "artifactRefs": [
         {
           "artifactId": "artifact:vue-template:render",
-          "selector": null,
           "rangeSource": "source-map",
           "confidence": "medium"
         }
@@ -303,7 +307,6 @@
       "artifactRefs": [
         {
           "artifactId": "artifact:vue-template:render",
-          "selector": null,
           "rangeSource": "source-map",
           "confidence": "medium"
         }
@@ -375,7 +378,6 @@
       "artifactRefs": [
         {
           "artifactId": "artifact:vue-style:compiled",
-          "selector": null,
           "rangeSource": "source-map",
           "confidence": "medium"
         }
@@ -387,7 +389,6 @@
       "kind": "symbol",
       "symbolKind": "vue-exposed-api",
       "symbolId": "expose:profilecard:formatuserlabel",
-      "annotation": null,
       "sourceRefs": [
         {
           "sourceId": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
@@ -408,7 +409,6 @@
       "artifactRefs": [
         {
           "artifactId": "artifact:vue-script:compiled",
-          "selector": null,
           "rangeSource": "source-map",
           "confidence": "medium"
         }

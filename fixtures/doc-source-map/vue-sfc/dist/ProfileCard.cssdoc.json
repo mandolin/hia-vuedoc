@@ -29,11 +29,11 @@
         "range": {
           "start": {
             "line": 35,
-            "column": 16
+            "column": 15
           },
           "end": {
             "line": 46,
-            "column": 2
+            "column": 1
           }
         },
         "rangeSource": "vue-sfc-parser",
@@ -49,11 +49,11 @@
           "range": {
             "start": {
               "line": 35,
-              "column": 16
+              "column": 15
             },
             "end": {
               "line": 46,
-              "column": 2
+              "column": 1
             }
           },
           "offset": 15
@@ -75,11 +75,11 @@
         "range": {
           "start": {
             "line": 35,
-            "column": 16
+            "column": 15
           },
           "end": {
             "line": 46,
-            "column": 2
+            "column": 1
           }
         },
         "rangeSource": "vue-sfc-parser",
@@ -95,11 +95,11 @@
           "range": {
             "start": {
               "line": 35,
-              "column": 16
+              "column": 15
             },
             "end": {
               "line": 46,
-              "column": 2
+              "column": 1
             }
           },
           "offset": 15
@@ -122,11 +122,11 @@
         "range": {
           "start": {
             "line": 35,
-            "column": 16
+            "column": 15
           },
           "end": {
             "line": 46,
-            "column": 2
+            "column": 1
           }
         },
         "offset": 15
@@ -142,11 +142,11 @@
         "range": {
           "start": {
             "line": 35,
-            "column": 16
+            "column": 15
           },
           "end": {
             "line": 46,
-            "column": 2
+            "column": 1
           }
         },
         "offset": 15
@@ -162,11 +162,11 @@
         "range": {
           "start": {
             "line": 35,
-            "column": 16
+            "column": 15
           },
           "end": {
             "line": 46,
-            "column": 2
+            "column": 1
           }
         },
         "offset": 15

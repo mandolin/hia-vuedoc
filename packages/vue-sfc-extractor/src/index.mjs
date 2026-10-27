@@ -547,15 +547,22 @@ function languageForBlock(type) {
   return "html";
 }
 
+/**
+ * @lang zh-CN 保留 Vue 编译器已提供的一基行列位置；起点与排除式终点均不再次平移。
+ * @lang en Preserves the Vue compiler's one-based line and column positions without shifting its start or exclusive end again.
+ * @param {{start:{line:number,column:number},end:{line:number,column:number}}} loc <lang><zh-CN>Vue SFC block 的原始位置，含 UTF-16 字符串偏移。</zh-CN><en>Original Vue SFC block location with UTF-16 string offsets.</en></lang>
+ * @returns {{start:{line:number,column:number},end:{line:number,column:number}}} <lang><zh-CN>与编译器原始范围同界的 HIA 行列范围。</zh-CN><en>HIA line-column range with the compiler's original boundaries.</en></lang>
+ */
 function rangeFromLoc(loc) {
+  // <lang><zh-CN>编译器列号已是一基；只投影字段，避免非 BMP/相邻块的边界各向后偏一列。</zh-CN><en>Compiler columns are already one-based; project fields only so astral characters and adjacent blocks do not shift one column.</en></lang>
   return {
     start: {
       line: loc.start.line,
-      column: loc.start.column + 1
+      column: loc.start.column
     },
     end: {
       line: loc.end.line,
-      column: loc.end.column + 1
+      column: loc.end.column
     }
   };
 }

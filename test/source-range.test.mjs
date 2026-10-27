@@ -83,6 +83,25 @@ test("keeps undocumented component point as low-confidence fallback", () => {
   assert.equal(manifest.entries[0].sourceRefs[0].rangeSource, "heuristic");
 });
 
+/** @lang zh-CN 空 SFC 的人工 1:1 点只保留未知位置，不能因起止相等而升级为已证零长声明。 @lang en An empty SFC's artificial 1:1 point remains unknown and must not become a proven zero-length declaration merely because its endpoints match. */
+test("keeps an empty SFC fallback unknown instead of claiming a zero-length source range", () => {
+  // <lang><zh-CN>真实提取器仍会产出组件身份，但空文件没有可证明的源码字符。</zh-CN><en>The real extractor still emits a component identity, but an empty file has no source character to prove.</en></lang>
+  const extraction = extractVueSfc("", { path: "src/EmptyFile.vue" });
+  const manifest = createVueSfcDocSourceMap({
+    vueArtifact: extraction,
+    vueDocPath: "EmptyFile.vuedoc.json",
+    htmDocPath: "EmptyFile.htmdoc.json",
+    cssDocPath: "EmptyFile.cssdoc.json",
+    hiaDocumentPath: "EmptyFile.hia.json"
+  });
+  const reference = manifest.entries[0]?.sourceRefs[0];
+  assert.equal(manifest.contractVersion, "1.1.0");
+  assert.equal(manifest.entries.length, 1);
+  assert.deepEqual(reference?.range, { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } });
+  assert.deepEqual(reference?.rangeConvention, { endBoundary: "unknown", columnUnit: "unknown" });
+  assert.equal(reference?.confidence, "low");
+});
+
 /** @lang zh-CN 只把已测模板注释提升为精确坐标；脚本、样式和宏保留真实来源与未知边界。 @lang en Only the measured template annotation gets exact coordinates; script, style and macro retain their origin and unknown boundaries. */
 test("declares range conventions per Vue source branch", async () => {
   // <lang><zh-CN>现有 fixture 同时包含四类分支，防止把统一 parser 标签误当成精度证明。</zh-CN><en>The existing fixture covers four branches so a shared parser label cannot stand in for precision evidence.</en></lang>

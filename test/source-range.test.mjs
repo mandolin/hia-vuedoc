@@ -102,6 +102,61 @@ test("keeps an empty SFC fallback unknown instead of claiming a zero-length sour
   assert.equal(reference?.confidence, "low");
 });
 
+/**
+ * @lang zh-CN 仅用于本仓回归的已证 UTF-16 起点查询基准；未知约定必须排除，完整共享读取器另在跨仓证据验证。
+ * @lang en A local regression oracle for proven UTF-16 start positions; unknown conventions are excluded, while the full shared reader is verified in cross-repository evidence.
+ * @param {object} manifest <lang><zh-CN>真实 Vue 写入器产出的文档源码映射。</zh-CN><en>Documentation source map emitted by the real Vue writer.</en></lang>
+ * @param {string} symbolId <lang><zh-CN>要查询的符号身份。</zh-CN><en>Symbol identity to query.</en></lang>
+ * @param {{line:number,column:number}} position <lang><zh-CN>一基 UTF-16 候选起点。</zh-CN><en>One-based UTF-16 candidate start.</en></lang>
+ * @returns {object[]} <lang><zh-CN>符合已证起点条件的映射条目。</zh-CN><en>Map entries matching a proven start.</en></lang>
+ */
+function entriesAtProvenUtf16Start(manifest, symbolId, position) {
+  return manifest.entries.filter((entry) => entry.symbolId === symbolId && entry.sourceRefs.some((reference) =>
+    ["inclusive", "exclusive"].includes(reference.rangeConvention?.endBoundary)
+    && reference.rangeConvention?.columnUnit === "utf16-code-unit"
+    && reference.range?.start?.line === position.line
+    && reference.range?.start?.column === position.column));
+}
+
+/** @lang zh-CN 真实未闭合模板的零长 parser 引用仍可按身份查看，但不能按已知位置命中。 @lang en A native point reference from an unclosed template remains discoverable by identity but cannot match a proven position. */
+test("keeps a native zero-length Vue recovery reference unverified", () => {
+  // <lang><zh-CN>两个非空输入改变子元素及模板的闭合状态；注释使恢复路径确有组件引用而非人工无注释回退。</zh-CN><en>The two nonempty inputs change whether the child element and template close; the annotation yields a component reference rather than an undocumented placeholder.</en></lang>
+  const recoveredSource = "<template><!-- @component Card --><div>";
+  const completeSource = "<template><!-- @component Card --><div/></template>";
+  const sourcePath = "src/Card.vue";
+  const options = { vueDocPath: "Card.vuedoc.json", htmDocPath: "Card.htmdoc.json", cssDocPath: "Card.cssdoc.json", hiaDocumentPath: "Card.hia.json" };
+  const recoveredNative = parse(recoveredSource, { filename: sourcePath, sourceMap: true });
+  const recovered = extractVueSfc(recoveredSource, { path: sourcePath });
+  const recoveredMap = createVueSfcDocSourceMap({ ...options, vueArtifact: recovered });
+  const recoveredEntry = recoveredMap.entries.find((entry) => entry.symbolKind === "vue-component");
+  const recoveredReference = recoveredEntry?.sourceRefs[0];
+
+  // <lang><zh-CN>实际 compiler-sfc 错误恢复把模板内容压成 1:11 的零长块；写入器必须保留来源且撤销精度。</zh-CN><en>Actual compiler-sfc recovery reduces template content to a point at 1:11; the writer must retain provenance and revoke precision.</en></lang>
+  assert.equal(recoveredNative.errors.length, 2);
+  assert.equal(recoveredNative.descriptor.template?.content.length, 0);
+  assert.deepEqual(recoveredNative.descriptor.template?.loc.start, recoveredNative.descriptor.template?.loc.end);
+  assert.ok(recovered.diagnostics.some((diagnostic) => diagnostic.code === "VUE_SFC_PARSE_ERROR"));
+  assert.equal(recoveredMap.contractVersion, "1.1.0");
+  assert.equal(recoveredEntry?.symbolId, recovered.symbols.find((symbol) => symbol.kind === "vue-component")?.id);
+  assert.deepEqual(recoveredReference?.range, { start: { line: 1, column: 11 }, end: { line: 1, column: 11 } });
+  assert.deepEqual(recoveredReference?.rangeConvention, { endBoundary: "unknown", columnUnit: "unknown" });
+  assert.equal(recoveredReference?.rangeSource, "parser");
+  assert.equal(recoveredReference?.confidence, "low");
+  assert.equal(entriesAtProvenUtf16Start(recoveredMap, recoveredEntry.symbolId, { line: 1, column: 11 }).length, 0);
+  assert.equal(recoveredMap.entries.filter((entry) => entry.symbolId === recoveredEntry.symbolId).length, 1);
+
+  // <lang><zh-CN>完整模板是位置查询正控，确保回归不靠一律拒绝而通过。</zh-CN><en>The complete template is a positive position-query control so blanket rejection cannot pass the regression.</en></lang>
+  const completeNative = parse(completeSource, { filename: sourcePath, sourceMap: true });
+  const complete = extractVueSfc(completeSource, { path: sourcePath });
+  const completeMap = createVueSfcDocSourceMap({ ...options, vueArtifact: complete });
+  const completeEntry = completeMap.entries.find((entry) => entry.symbolKind === "vue-component");
+  const completeReference = completeEntry?.sourceRefs[0];
+  assert.deepEqual(completeNative.errors, []);
+  assert.deepEqual(completeReference?.range, { start: { line: 1, column: 11 }, end: { line: 1, column: 41 } });
+  assert.deepEqual(completeReference?.rangeConvention, { endBoundary: "exclusive", columnUnit: "utf16-code-unit" });
+  assert.equal(entriesAtProvenUtf16Start(completeMap, completeEntry.symbolId, { line: 1, column: 11 }).length, 1);
+});
+
 /** @lang zh-CN 只把已测模板注释提升为精确坐标；脚本、样式和宏保留真实来源与未知边界。 @lang en Only the measured template annotation gets exact coordinates; script, style and macro retain their origin and unknown boundaries. */
 test("declares range conventions per Vue source branch", async () => {
   // <lang><zh-CN>现有 fixture 同时包含四类分支，防止把统一 parser 标签误当成精度证明。</zh-CN><en>The existing fixture covers four branches so a shared parser label cannot stand in for precision evidence.</en></lang>

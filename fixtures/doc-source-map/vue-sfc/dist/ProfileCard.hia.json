@@ -510,7 +510,7 @@
     "docSourceMaps": [
       {
         "contract": "doc-source-map",
-        "contractVersion": "0.1.0-draft",
+        "contractVersion": "1.1.0",
         "path": "ProfileCard.docmap.json",
         "entryArtifact": "ProfileCard.template.js"
       }

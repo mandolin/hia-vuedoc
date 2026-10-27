@@ -45,16 +45,30 @@ function main() {
 
   const docMap = readJson("ProfileCard.docmap.json");
   assert.equal(docMap.contract, "doc-source-map");
+  assert.equal(docMap.contractVersion, "1.1.0");
   assert.equal(docMap.privacy.sourcesContentPolicy, "none");
   assert.ok(docMap.sourceMaps.some((sourceMap) => sourceMap.path === "ProfileCard.template.js.map"));
   assert.ok(docMap.sourceMaps.some((sourceMap) => sourceMap.path === "ProfileCard.style.css.map"));
   assert.ok(docMap.entries.some((entry) => entry.symbolKind === "vue-component"));
   assert.ok(docMap.entries.some((entry) => entry.artifactRefs[0].artifactId === "artifact:vue-style:compiled"));
+  const artifactIds = new Set(docMap.artifacts.map((artifact) => artifact.id));
+  const sourceIds = new Set(docMap.sources.map((source) => source.id));
+  for (const sourceMap of docMap.sourceMaps) {
+    assert.ok(artifactIds.has(sourceMap.mapsFrom));
+    assert.ok(sourceMap.mapsTo.every((sourceId) => sourceIds.has(sourceId)));
+  }
+  for (const entry of docMap.entries) for (const reference of entry.sourceRefs) {
+    assert.ok(sourceIds.has(reference.sourceId));
+    assert.equal(Boolean(reference.range), Boolean(reference.rangeConvention));
+  }
+  assert.deepEqual(docMap.entries.find((entry) => entry.symbolKind === "html-slot").sourceRefs[0].rangeConvention, { endBoundary: "exclusive", columnUnit: "utf16-code-unit" });
+  assert.deepEqual(docMap.entries.find((entry) => entry.symbolKind === "vue-exposed-api").sourceRefs[0].rangeConvention, { endBoundary: "unknown", columnUnit: "unknown" });
 
   const hia = readJson("ProfileCard.hia.json");
   assert.equal(hia.schemaVersion, "0.2.0");
   assert.ok(hia.symbols.some((symbol) => symbol.kind === "html-component" && symbol.name === "ProfileCard"));
   assert.ok(hia.metadata.docSourceMaps[0].path.endsWith("ProfileCard.docmap.json"));
+  assert.equal(hia.metadata.docSourceMaps[0].contractVersion, docMap.contractVersion);
 
   expectNoUnsafePaths(vueDoc, docMap, hia);
   expectNoUnexpectedSourcesContent(fixtureRoot);

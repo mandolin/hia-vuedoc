@@ -167,34 +167,37 @@ async function processInput(input, request, index) {
     id: request.options.componentId ?? slug(sourcePath)
   });
   const outputRefs = await writeCompiledOutputs(compiled.outputs, basePath, request.outputDirectory);
-  const htmDoc = vueDocToHtmlExtraction(vueArtifact, {
-    docSourceMapPath,
-    templatePath: outputRefs.templatePath ?? sourcePath
-  });
-  const cssDoc = vueDocToCssExtraction(vueArtifact, {
-    docSourceMapPath,
-    stylePath: outputRefs.stylePath ?? sourcePath
-  });
-  const hiaDocument = vueDocToHiaDocument(vueArtifact, {
-    id: `vuedoc:${sourcePath}`,
-    title: path.posix.basename(sourcePath),
-    docSourceMapPath,
-    entryArtifact: outputRefs.templatePath ?? null
-  });
-  const docSourceMap = createVueSfcDocSourceMap({
+  // <lang><zh-CN>关闭映射输出时不向三个桥接工件写入悬空链接。</zh-CN><en>Do not place dangling map links in the three bridge artifacts when map emission is disabled.</en></lang>
+  const activeDocSourceMapPath = request.options.emitDocSourceMap ? docSourceMapPath : null;
+  // <lang><zh-CN>先得到真实映射版本，再写 HIA 文档及结果清单；关闭映射时不构造悬空工件。</zh-CN><en>Obtain the actual map version before writing the HIA document and result manifest; do not build a dangling map when disabled.</en></lang>
+  const docSourceMap = activeDocSourceMapPath ? createVueSfcDocSourceMap({
     vueArtifact,
     vueDocPath,
     htmDocPath,
     cssDocPath,
     hiaDocumentPath,
     ...outputRefs
+  }) : null;
+  const htmDoc = vueDocToHtmlExtraction(vueArtifact, {
+    docSourceMapPath: activeDocSourceMapPath,
+    templatePath: outputRefs.templatePath ?? sourcePath
   });
-
+  const cssDoc = vueDocToCssExtraction(vueArtifact, {
+    docSourceMapPath: activeDocSourceMapPath,
+    stylePath: outputRefs.stylePath ?? sourcePath
+  });
+  const hiaDocument = vueDocToHiaDocument(vueArtifact, {
+    id: `vuedoc:${sourcePath}`,
+    title: path.posix.basename(sourcePath),
+    docSourceMapPath: activeDocSourceMapPath,
+    docSourceMapContractVersion: docSourceMap?.contractVersion,
+    entryArtifact: outputRefs.templatePath ?? null
+  });
   await writeJson(path.join(request.outputDirectory, vueDocPath), vueArtifact);
   await writeJson(path.join(request.outputDirectory, htmDocPath), htmDoc);
   await writeJson(path.join(request.outputDirectory, cssDocPath), cssDoc);
   await writeJson(path.join(request.outputDirectory, hiaDocumentPath), hiaDocument);
-  if (request.options.emitDocSourceMap) {
+  if (docSourceMap) {
     await writeJson(path.join(request.outputDirectory, docSourceMapPath), docSourceMap);
   }
 
@@ -219,11 +222,11 @@ async function processInput(input, request, index) {
     artifact(`${artifactIdBase}-hia-document`, "hia-document", hiaDocumentPath, "json", "application/json", request.profileIds)
   ];
 
-  if (request.options.emitDocSourceMap) {
+  if (docSourceMap) {
     artifacts.push({
       ...artifact(`${artifactIdBase}-doc-source-map`, "doc-source-map", docSourceMapPath, "json", "application/json", request.profileIds),
       contract: "doc-source-map",
-      contractVersion: "0.1.0-draft"
+      contractVersion: docSourceMap.contractVersion
     });
   }
 

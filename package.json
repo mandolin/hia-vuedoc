@@ -10,7 +10,7 @@
     "check:syntax": "node --check scripts/build-fixtures.cjs && node --check scripts/check-fixtures.cjs && node --check scripts/check-license-audit.cjs && node --check packages/vuedoc-spec/src/index.mjs && node --check packages/vue-sfc-extractor/src/index.mjs && node --check packages/vue-sfc-bridge/src/index.mjs && node --check packages/vue-sfc-doc-source-map/src/index.mjs && node --check packages/vuedoc-producer/src/index.mjs && node --check packages/vuedoc-runner/src/index.mjs && node --check packages/vuedoc-runner/src/cli.mjs",
     "license:audit": "node scripts/check-license-audit.cjs",
     "release:gate": "npm run check:syntax && npm run build:fixtures && npm run check:fixtures && npm run license:audit && npm test",
-    "test": "npm run build:fixtures && node --test test/vuedoc-fixture.test.mjs test/doc-source-map-shape.test.mjs",
+    "test": "npm run build:fixtures && node --test test/vuedoc-fixture.test.mjs test/doc-source-map-shape.test.mjs test/source-range.test.mjs",
     "test:all": "npm run release:gate"
   },
   "workspaces": [

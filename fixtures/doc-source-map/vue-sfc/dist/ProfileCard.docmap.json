@@ -1,6 +1,6 @@
 {
   "contract": "doc-source-map",
-  "contractVersion": "0.1.0-draft",
+  "contractVersion": "1.1.0",
   "id": "docmap:vue-sfc:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
   "producer": {
     "name": "@hia-doc/vue-sfc-doc-source-map",
@@ -98,7 +98,7 @@
       "kind": "ordinary-source-map",
       "path": "ProfileCard.template.js.map",
       "language": "javascript",
-      "mapsFrom": "source:vue:profilecard-template-js",
+      "mapsFrom": "artifact:vue-template:render",
       "mapsTo": [
         "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue"
       ]
@@ -108,7 +108,7 @@
       "kind": "ordinary-source-map",
       "path": "ProfileCard.script.js.map",
       "language": "javascript",
-      "mapsFrom": "source:vue:profilecard-script-js",
+      "mapsFrom": "artifact:vue-script:compiled",
       "mapsTo": [
         "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue"
       ]
@@ -118,7 +118,7 @@
       "kind": "ordinary-source-map",
       "path": "ProfileCard.style.css.map",
       "language": "css",
-      "mapsFrom": "source:vue:profilecard-style-css",
+      "mapsFrom": "artifact:vue-style:compiled",
       "mapsTo": [
         "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue"
       ]
@@ -130,9 +130,9 @@
       "stages": [
         {
           "from": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
-          "to": "artifact:vue-template:render",
-          "transform": "@vue/compiler-sfc:compileTemplate",
-          "sourceMap": "sourcemap:vue-template",
+          "to": "artifact:vuedoc:extraction",
+          "transform": "vue-sfc-to-vuedoc",
+          "sourceMap": null,
           "linkage": [
             "entry:component-profilecard",
             "entry:slot-profilecard-actions",
@@ -140,6 +140,27 @@
             "entry:event-profilecard-select",
             "entry:selector-profilecard-profile-card",
             "entry:cssprop-profilecard--profile-card-accent",
+            "entry:expose-profilecard-formatuserlabel"
+          ]
+        },
+        {
+          "from": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
+          "to": "artifact:vue-template:render",
+          "transform": "@vue/compiler-sfc:compileTemplate",
+          "sourceMap": "sourcemap:vue-template",
+          "linkage": [
+            "entry:component-profilecard",
+            "entry:slot-profilecard-actions",
+            "entry:stylehook-profilecard-profile-card"
+          ]
+        },
+        {
+          "from": "source:vue:fixtures-doc-source-map-vue-sfc-src-components-profilecard-vue",
+          "to": "artifact:vue-script:compiled",
+          "transform": "@vue/compiler-sfc:compileScript",
+          "sourceMap": "sourcemap:vue-script",
+          "linkage": [
+            "entry:event-profilecard-select",
             "entry:expose-profilecard-formatuserlabel"
           ]
         },
@@ -194,7 +215,12 @@
               "column": 1
             }
           },
-          "rangeSource": "vue-sfc-parser",
+          "rangeConvention": {
+            "endBoundary": "exclusive",
+            "columnUnit": "utf16-code-unit"
+          },
+          "rangeSource": "parser",
+          "rangeSourceDetail": "vue-sfc-parser",
           "confidence": "medium"
         }
       ],
@@ -230,7 +256,12 @@
               "column": 1
             }
           },
-          "rangeSource": "vue-sfc-parser",
+          "rangeConvention": {
+            "endBoundary": "exclusive",
+            "columnUnit": "utf16-code-unit"
+          },
+          "rangeSource": "parser",
+          "rangeSourceDetail": "vue-sfc-parser",
           "confidence": "medium"
         }
       ],
@@ -265,7 +296,12 @@
               "column": 1
             }
           },
-          "rangeSource": "vue-sfc-parser",
+          "rangeConvention": {
+            "endBoundary": "exclusive",
+            "columnUnit": "utf16-code-unit"
+          },
+          "rangeSource": "parser",
+          "rangeSourceDetail": "vue-sfc-parser",
           "confidence": "medium"
         }
       ],
@@ -300,8 +336,13 @@
               "column": 1
             }
           },
-          "rangeSource": "vue-sfc-parser",
-          "confidence": "medium"
+          "rangeConvention": {
+            "endBoundary": "unknown",
+            "columnUnit": "unknown"
+          },
+          "rangeSource": "parser",
+          "rangeSourceDetail": "vue-sfc-parser",
+          "confidence": "low"
         }
       ],
       "artifactRefs": [
@@ -335,8 +376,13 @@
               "column": 1
             }
           },
-          "rangeSource": "vue-sfc-parser",
-          "confidence": "medium"
+          "rangeConvention": {
+            "endBoundary": "unknown",
+            "columnUnit": "unknown"
+          },
+          "rangeSource": "parser",
+          "rangeSourceDetail": "vue-sfc-parser",
+          "confidence": "low"
         }
       ],
       "artifactRefs": [
@@ -371,8 +417,13 @@
               "column": 1
             }
           },
-          "rangeSource": "vue-sfc-parser",
-          "confidence": "medium"
+          "rangeConvention": {
+            "endBoundary": "unknown",
+            "columnUnit": "unknown"
+          },
+          "rangeSource": "parser",
+          "rangeSourceDetail": "vue-sfc-parser",
+          "confidence": "low"
         }
       ],
       "artifactRefs": [
@@ -402,8 +453,13 @@
               "column": 18
             }
           },
-          "rangeSource": "vue-sfc-parser",
-          "confidence": "high"
+          "rangeConvention": {
+            "endBoundary": "unknown",
+            "columnUnit": "unknown"
+          },
+          "rangeSource": "heuristic",
+          "rangeSourceDetail": "vue-compiler-macro",
+          "confidence": "low"
         }
       ],
       "artifactRefs": [

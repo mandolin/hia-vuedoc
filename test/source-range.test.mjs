@@ -58,7 +58,9 @@ test("preserves compiler SFC boundaries with CRLF, astral text and adjacent tags
   const component = extraction.symbols.find((symbol) => symbol.kind === "vue-component");
   const mapped = manifest.entries.find((entry) => entry.symbolId === component?.id);
   assert.ok(mapped);
+  assert.equal(manifest.contractVersion, "1.1.0");
   assert.deepEqual(mapped.sourceRefs[0].range, template.range);
+  assert.deepEqual(mapped.sourceRefs[0].rangeConvention, { endBoundary: "exclusive", columnUnit: "utf16-code-unit" });
 });
 
 /** @lang zh-CN 无注释组件的人工点仅是回退线索，不能冒充已证实的空范围。 @lang en The artificial point for an undocumented component is a fallback hint, not a proven empty span. */
@@ -70,4 +72,56 @@ test("keeps undocumented component point as low-confidence fallback", () => {
   assert.deepEqual(component.source.range, { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } });
   assert.equal(component.source.confidence, "low");
   assert.equal(Object.hasOwn(component.source, "rangeConvention"), false);
+  const manifest = createVueSfcDocSourceMap({
+    vueArtifact: extraction,
+    vueDocPath: "Empty.vuedoc.json",
+    htmDocPath: "Empty.htmdoc.json",
+    cssDocPath: "Empty.cssdoc.json",
+    hiaDocumentPath: "Empty.hia.json"
+  });
+  assert.deepEqual(manifest.entries[0].sourceRefs[0].rangeConvention, { endBoundary: "unknown", columnUnit: "unknown" });
+  assert.equal(manifest.entries[0].sourceRefs[0].rangeSource, "heuristic");
+});
+
+/** @lang zh-CN 只把已测模板注释提升为精确坐标；脚本、样式和宏保留真实来源与未知边界。 @lang en Only the measured template annotation gets exact coordinates; script, style and macro retain their origin and unknown boundaries. */
+test("declares range conventions per Vue source branch", async () => {
+  // <lang><zh-CN>现有 fixture 同时包含四类分支，防止把统一 parser 标签误当成精度证明。</zh-CN><en>The existing fixture covers four branches so a shared parser label cannot stand in for precision evidence.</en></lang>
+  const source = await readFile(fileURLToPath(new URL("../fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue", import.meta.url)), "utf8");
+  const extraction = extractVueSfc(source, { path: "src/ProfileCard.vue" });
+  const options = { vueArtifact: extraction, vueDocPath: "ProfileCard.vuedoc.json", htmDocPath: "ProfileCard.htmdoc.json", cssDocPath: "ProfileCard.cssdoc.json", hiaDocumentPath: "ProfileCard.hia.json" };
+  const manifest = createVueSfcDocSourceMap(options);
+  const template = manifest.entries.find((entry) => entry.symbolKind === "html-slot");
+  const script = manifest.entries.find((entry) => entry.symbolKind === "html-event");
+  const style = manifest.entries.find((entry) => entry.symbolKind === "css-selector");
+  const macro = manifest.entries.find((entry) => entry.symbolKind === "vue-exposed-api");
+
+  assert.deepEqual(template?.sourceRefs[0].rangeConvention, { endBoundary: "exclusive", columnUnit: "utf16-code-unit" });
+  for (const entry of [script, style, macro]) {
+    assert.ok(entry);
+    assert.deepEqual(entry.sourceRefs[0].rangeConvention, { endBoundary: "unknown", columnUnit: "unknown" });
+    assert.equal(entry.sourceRefs[0].confidence, "low");
+  }
+  assert.equal(macro.sourceRefs[0].rangeSource, "heuristic");
+  assert.equal(macro.sourceRefs[0].rangeSourceDetail, "vue-compiler-macro");
+  assert.equal(macro.sourceRefs[0].confidence, "low");
+  assert.ok(manifest.entries.every((entry) => entry.sourceRefs.every((reference) => Boolean(reference.rangeConvention) === Boolean(reference.range))));
+
+  // <lang><zh-CN>外来适配器即使复制相同模板坐标，也不能继承本提取器的实测精度。</zh-CN><en>An external adapter cannot inherit this extractor's measured precision by copying the same template coordinates.</en></lang>
+  const external = structuredClone(extraction);
+  external.producer.name = "external-vue-adapter";
+  const externalMap = createVueSfcDocSourceMap({ ...options, vueArtifact: external });
+  const externalTemplate = externalMap.entries.find((entry) => entry.symbolKind === "html-slot");
+  assert.deepEqual(externalTemplate?.sourceRefs[0].rangeConvention, { endBoundary: "unknown", columnUnit: "unknown" });
+  assert.equal(externalTemplate?.sourceRefs[0].rangeSource, "adapter");
+  assert.equal(externalTemplate?.sourceRefs[0].confidence, "low");
+
+  // <lang><zh-CN>即使路径和块坐标未变，解析错误与未知提取版本也撤销模板精度声明。</zh-CN><en>Even with unchanged path and block coordinates, parse errors and unknown extractor versions revoke template precision.</en></lang>
+  const parsedWithError = structuredClone(extraction);
+  parsedWithError.diagnostics.push({ code: "VUE_SFC_PARSE_ERROR", severity: "error", message: "Synthetic parser error." });
+  const errorMap = createVueSfcDocSourceMap({ ...options, vueArtifact: parsedWithError });
+  assert.deepEqual(errorMap.entries.find((entry) => entry.symbolKind === "html-slot")?.sourceRefs[0].rangeConvention, { endBoundary: "unknown", columnUnit: "unknown" });
+  const unknownVersion = structuredClone(extraction);
+  unknownVersion.contractVersion = "0.0.0-draft";
+  const versionMap = createVueSfcDocSourceMap({ ...options, vueArtifact: unknownVersion });
+  assert.deepEqual(versionMap.entries.find((entry) => entry.symbolKind === "html-slot")?.sourceRefs[0].rangeConvention, { endBoundary: "unknown", columnUnit: "unknown" });
 });

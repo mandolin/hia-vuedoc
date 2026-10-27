@@ -3,6 +3,8 @@ import { VUEDOC_EXTRACTION_CONTRACT } from "@hia-doc/vuedoc-spec";
 const HIA_CORE_SCHEMA_VERSION = "0.2.0";
 const HIA_SOURCE_MODEL = "hia-source";
 const HIA_SOURCE_MODEL_VERSION = "0.2.0";
+/** @lang zh-CN 单独调用桥接器时默认链接当前新版映射；调用方可传入实际映射版本。 @lang en Standalone bridge calls default to the current map version; callers may supply the actual map version. */
+const DEFAULT_DOC_SOURCE_MAP_CONTRACT_VERSION = "1.1.0";
 
 export function vueDocToHtmlExtraction(vueArtifact, options = {}) {
   assertVueDocArtifact(vueArtifact);
@@ -121,6 +123,13 @@ export function vueDocToCssExtraction(vueArtifact, options = {}) {
   };
 }
 
+/**
+ * @lang zh-CN 将 VueDoc 提取件投影为 HIA 文档；只有确有映射路径时才写链接及其实际契约版本。
+ * @lang en Projects VueDoc extraction to an HIA document, writing a link and its actual contract version only when a map path exists.
+ * @param {object} vueArtifact <lang><zh-CN>VueDoc 提取件。</zh-CN><en>VueDoc extraction artifact.</en></lang>
+ * @param {object} [options] <lang><zh-CN>文档身份、标题、本地化和可选映射路径/版本。</zh-CN><en>Document identity, title, locales and optional map path/version.</en></lang>
+ * @returns {object} <lang><zh-CN>带可选源码映射元数据的 HIA 文档。</zh-CN><en>HIA document with optional source-map metadata.</en></lang>
+ */
 export function vueDocToHiaDocument(vueArtifact, options = {}) {
   assertVueDocArtifact(vueArtifact);
   const title = options.title ?? "Vue SFC Document";
@@ -152,7 +161,7 @@ export function vueDocToHiaDocument(vueArtifact, options = {}) {
         ? [
             {
               contract: "doc-source-map",
-              contractVersion: "0.1.0-draft",
+              contractVersion: options.docSourceMapContractVersion ?? DEFAULT_DOC_SOURCE_MAP_CONTRACT_VERSION,
               path: options.docSourceMapPath,
               entryArtifact: options.entryArtifact ?? null
             }

@@ -94,6 +94,8 @@ describe("Vue SFC bridge", () => {
     assert.equal(cssDoc.contract, "hia-cssdoc-extraction");
     assert.equal(hia.schemaVersion, "0.2.0");
     assert.equal(docMap.contract, "doc-source-map");
+    assert.equal(docMap.contractVersion, "1.1.0");
+    assert.equal(hia.metadata.docSourceMaps[0].contractVersion, docMap.contractVersion);
     assert.ok(docMap.sourceMaps.length >= 2);
   });
 
@@ -126,6 +128,41 @@ describe("Vue SFC bridge", () => {
       assert.ok(result.artifacts.some((artifact) => artifact.kind === "cssdoc-extraction"));
       assert.ok(result.artifacts.some((artifact) => artifact.kind === "doc-source-map"));
       assert.ok(await fileExists(path.join(outputDirectory, "vuedoc.producer-result.json")));
+      const mapDescriptor = result.artifacts.find((item) => item.kind === "doc-source-map");
+      const hiaDescriptor = result.artifacts.find((item) => item.kind === "hia-document");
+      const map = JSON.parse(await fs.readFile(path.join(outputDirectory, mapDescriptor.path), "utf8"));
+      const document = JSON.parse(await fs.readFile(path.join(outputDirectory, hiaDescriptor.path), "utf8"));
+      assert.equal(mapDescriptor.contractVersion, "1.1.0");
+      assert.equal(mapDescriptor.contractVersion, map.contractVersion);
+      assert.equal(document.metadata.docSourceMaps[0].contractVersion, map.contractVersion);
+    } finally {
+      await fs.rm(outputDirectory, { recursive: true, force: true });
+    }
+  });
+
+  /** @lang zh-CN 关闭源码映射时，结果和三个桥接产物不得留下指向未发布 JSON 的链接。 @lang en Disabling the source map leaves no link to unpublished JSON in the result or three bridge artifacts. */
+  it("omits source-map references when emission is disabled", async () => {
+    const outputDirectory = path.join(repositoryRoot, "fixtures", "doc-source-map", "vue-sfc", "producer-no-map-out");
+    await fs.rm(outputDirectory, { recursive: true, force: true });
+
+    try {
+      const result = await vuedocProducer.produce({
+        workspaceRoot: repositoryRoot,
+        outputDirectory,
+        inputs: [{ kind: "vue-sfc", path: fixturePath, language: "vue" }],
+        options: { emitDocSourceMap: false, sourcesContentPolicy: "none", writeResultManifest: true }
+      });
+      assert.equal(result.status, "success");
+      assert.equal(result.artifacts.some((artifact) => artifact.kind === "doc-source-map"), false);
+
+      // <lang><zh-CN>按实际清单路径读取桥接工件，确认元数据与文件引用同时关闭。</zh-CN><en>Read bridge artifacts from actual manifest paths and verify both metadata and file links are absent.</en></lang>
+      const findArtifact = async (kind) => JSON.parse(await fs.readFile(path.join(outputDirectory, result.artifacts.find((item) => item.kind === kind).path), "utf8"));
+      const hia = await findArtifact("hia-document");
+      const html = await findArtifact("htmdoc-extraction");
+      const css = await findArtifact("cssdoc-extraction");
+      assert.deepEqual(hia.metadata.docSourceMaps, []);
+      assert.equal(html.sourceMap.href, null);
+      assert.equal(css.sourceMap.href, null);
     } finally {
       await fs.rm(outputDirectory, { recursive: true, force: true });
     }

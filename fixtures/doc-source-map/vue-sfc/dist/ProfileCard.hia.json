@@ -81,7 +81,7 @@
                   "column": 1
                 }
               },
-              "offset": 13
+              "offset": 3
             }
           },
           "bridgeTargets": [
@@ -153,7 +153,7 @@
                   "column": 1
                 }
               },
-              "offset": 13
+              "offset": 3
             }
           },
           "bridgeTargets": [
@@ -223,7 +223,7 @@
                   "column": 1
                 }
               },
-              "offset": 13
+              "offset": 3
             }
           },
           "bridgeTargets": [
@@ -293,7 +293,7 @@
                   "column": 1
                 }
               },
-              "offset": 15
+              "offset": 1
             }
           },
           "bridgeTargets": [
@@ -363,7 +363,7 @@
                   "column": 1
                 }
               },
-              "offset": 15
+              "offset": 1
             }
           },
           "bridgeTargets": [
@@ -433,7 +433,7 @@
                   "column": 1
                 }
               },
-              "offset": 15
+              "offset": 1
             }
           },
           "bridgeTargets": [

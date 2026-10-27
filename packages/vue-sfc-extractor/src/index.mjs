@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @lang zh-CN 从 Vue 单文件组件提取文档语义与编译输出；注释仅从编译器确认的块内容读取。
+ * @lang en Extracts documentation and compiled output from Vue single-file components; reads annotations only from compiler-confirmed block content.
+ */
 import { compileScript, compileStyle, compileTemplate, parse } from "@vue/compiler-sfc";
 import {
   VUEDOC_EXTRACTION_CONTRACT,
@@ -12,6 +17,14 @@ const DEFAULT_LOCALE = "en";
 const HIA_TEXT_I18N_MODEL = "hia-text-i18n";
 const HIA_TEXT_I18N_MODEL_VERSION = "0.2.0";
 
+/**
+ * @lang zh-CN 提取单文件组件的块、注释和符号；块位置按 Vue 编译器的 UTF-16 源码偏移截取，解析错误保留为诊断。
+ * @lang en Extracts SFC blocks, annotations and symbols; slices block content by Vue compiler UTF-16 source offsets and retains parse errors as diagnostics.
+ * @param {string} sourceText <lang><zh-CN>原始 Vue 源码，未经预处理。</zh-CN><en>Original, unpreprocessed Vue source.</en></lang>
+ * @param {{path?:string,filename?:string,defaultLocale?:string}} [options] <lang><zh-CN>相对来源路径、可选编译器文件名和默认语言。</zh-CN><en>Relative source path, optional compiler filename and default locale.</en></lang>
+ * @returns {object} <lang><zh-CN>不嵌入源码正文的 VueDoc 提取工件；无文档注释时仍保留组件身份。</zh-CN><en>VueDoc extraction artifact without embedded source body; retains component identity when no documentation comment exists.</en></lang>
+ * @throws {Error} <lang><zh-CN>来源路径不安全或编译器无法处理输入时抛出；普通解析错误写入 diagnostics。</zh-CN><en>Throws for an unsafe source path or compiler failure; ordinary parse errors go to diagnostics.</en></lang>
+ */
 export function extractVueSfc(sourceText, options = {}) {
   const sourcePath = normalizePath(options.path ?? "src/Component.vue");
   const defaultLocale = normalizeLocale(options.defaultLocale) || DEFAULT_LOCALE;
@@ -21,8 +34,14 @@ export function extractVueSfc(sourceText, options = {}) {
     sourceMap: true
   });
   const descriptor = parsed.descriptor;
-  const blocks = collectBlocks(descriptor, sourcePath);
-  const annotations = blocks.flatMap((block) => extractAnnotationsFromBlock(block, sourceText));
+  // <lang><zh-CN>内部记录同时保留公开块形状与编译器原始内容偏移；偏移不进入提取工件。</zh-CN><en>Internal records retain both the public block shape and compiler content offsets; offsets do not enter the extraction artifact.</en></lang>
+  const blockRecords = collectBlocks(descriptor, sourcePath);
+  const blocks = blockRecords.map((record) => record.block);
+  // <lang><zh-CN>只扫描原始源码中每块的半开内容切片，避免同一行闭合标签后的外部注释越界归属。</zh-CN><en>Scan only each block's half-open content slice in the original source, excluding same-line comments after its closing tag.</en></lang>
+  const annotations = blockRecords.flatMap((record) => extractAnnotationsFromBlock(
+    record.block,
+    sourceText.slice(record.contentStartOffset, record.contentEndOffset)
+  ));
   const componentName = findComponentName(annotations) ?? componentNameFromPath(sourcePath);
   const scriptSetupExposes = collectScriptSetupExposes(descriptor.scriptSetup, sourcePath);
   const symbols = createSymbols(annotations, componentName, sourcePath, scriptSetupExposes, { defaultLocale });
@@ -145,6 +164,13 @@ export function compileVueSfc(sourceText, options = {}) {
   };
 }
 
+/**
+ * @lang zh-CN 按编译器块顺序收集公开块与仅内部使用的内容偏移，不改变提取工件 schema。
+ * @lang en Collects public blocks and internal-only content offsets in compiler order without changing the extraction schema.
+ * @param {object} descriptor <lang><zh-CN>Vue 编译器的单文件组件描述符。</zh-CN><en>Vue compiler SFC descriptor.</en></lang>
+ * @param {string} sourcePath <lang><zh-CN>安全的相对来源路径。</zh-CN><en>Safe relative source path.</en></lang>
+ * @returns {object[]} <lang><zh-CN>公开块和半开 UTF-16 源码偏移记录。</zh-CN><en>Records pairing public blocks with half-open UTF-16 source offsets.</en></lang>
+ */
 function collectBlocks(descriptor, sourcePath) {
   const result = [];
   pushBlock(result, "template", descriptor.template, sourcePath, 0);
@@ -155,29 +181,51 @@ function collectBlocks(descriptor, sourcePath) {
   return result;
 }
 
+/**
+ * @lang zh-CN 仅在编译器确有该块时追加记录；内容边界直接来自 loc offset。
+ * @lang en Appends a record only for an existing compiler block, taking content bounds directly from loc offsets.
+ */
 function pushBlock(result, type, block, sourcePath, index) {
   if (!block) {
     return;
   }
   result.push({
-    id: `block:${type}:${index}`,
-    type,
-    index,
-    path: sourcePath,
-    language: block.lang ?? languageForBlock(type),
-    range: rangeFromLoc(block.loc),
-    attrs: block.attrs ?? {},
-    scoped: Boolean(block.scoped),
-    hasSourceMap: Boolean(block.map)
+    block: {
+      id: `block:${type}:${index}`,
+      type,
+      index,
+      path: sourcePath,
+      language: block.lang ?? languageForBlock(type),
+      range: rangeFromLoc(block.loc),
+      attrs: block.attrs ?? {},
+      scoped: Boolean(block.scoped),
+      hasSourceMap: Boolean(block.map)
+    },
+    // <lang><zh-CN>Vue 的 loc offset 是原始 JS 字符串的 UTF-16 半开内容边界，空块两端相同。</zh-CN><en>Vue loc offsets are half-open UTF-16 content bounds in the original JS string, equal for an empty block.</en></lang>
+    contentStartOffset: block.loc.start.offset,
+    contentEndOffset: block.loc.end.offset
   });
 }
 
-function extractAnnotationsFromBlock(block, sourceText) {
-  const text = sliceRange(sourceText, block.range);
-  const commentBodies = collectCommentBodies(text, block.type);
+/**
+ * @lang zh-CN 从单个编译器确认的块内容解析注释，不扫描同一行的相邻块或外部文本。
+ * @lang en Parses annotations from one compiler-confirmed block body without scanning adjacent blocks or outside text on the same line.
+ * @param {object} block <lang><zh-CN>公开块身份与来源范围。</zh-CN><en>Public block identity and source range.</en></lang>
+ * @param {string} blockContent <lang><zh-CN>原始源码中的精确块内容切片。</zh-CN><en>Exact block-content slice from the original source.</en></lang>
+ * @returns {object[]} <lang><zh-CN>仅属于该块的注释。</zh-CN><en>Annotations belonging only to that block.</en></lang>
+ */
+function extractAnnotationsFromBlock(block, blockContent) {
+  const commentBodies = collectCommentBodies(blockContent, block.type);
   return commentBodies.flatMap((comment) => parseAnnotationBlock(comment.body, block, comment.offset));
 }
 
+/**
+ * @lang zh-CN 在单个块的精确内容中找注释，返回相对该内容零基 UTF-16 的注释起点。
+ * @lang en Finds comments within exact content of one block, returning zero-based UTF-16 starts relative to that content.
+ * @param {string} text <lang><zh-CN>编译器块内容。</zh-CN><en>Compiler block content.</en></lang>
+ * @param {string} blockType <lang><zh-CN>决定模板或脚本/样式注释格式的块类型。</zh-CN><en>Block type selecting template or script/style comment syntax.</en></lang>
+ * @returns {{body:string,offset:number}[]} <lang><zh-CN>注释正文及块内容内起点。</zh-CN><en>Comment bodies and starts within block content.</en></lang>
+ */
 function collectCommentBodies(text, blockType) {
   const patterns = blockType === "template"
     ? [/<!--([\s\S]*?)-->/g]
@@ -194,6 +242,14 @@ function collectCommentBodies(text, blockType) {
   return bodies;
 }
 
+/**
+ * @lang zh-CN 把一条块内注释拆成文档标签；来源 offset 是注释起点，不是文件绝对坐标。
+ * @lang en Parses one in-block comment into documentation tags; source offset points to the comment within the block, not an absolute file coordinate.
+ * @param {string} body <lang><zh-CN>注释正文。</zh-CN><en>Comment body.</en></lang>
+ * @param {object} block <lang><zh-CN>归属块的身份和源码范围。</zh-CN><en>Owning block identity and source range.</en></lang>
+ * @param {number} offset <lang><zh-CN>零基 UTF-16 块内容内注释起点。</zh-CN><en>Zero-based UTF-16 comment start within block content.</en></lang>
+ * @returns {object[]} <lang><zh-CN>该注释中的有效 VueDoc 标签。</zh-CN><en>Valid VueDoc tags in the comment.</en></lang>
+ */
 function parseAnnotationBlock(body, block, offset) {
   const annotations = [];
   const normalized = body
@@ -584,13 +640,6 @@ function positionForContentOffset(block, offset) {
       ? block.loc.start.column + lines.at(-1).length + 1
       : lines.at(-1).length + 1
   };
-}
-
-function sliceRange(text, range) {
-  const lines = text.split(/\r?\n/);
-  const startLine = Math.max(range.start.line - 1, 0);
-  const endLine = Math.max(range.end.line - 1, startLine);
-  return lines.slice(startLine, endLine + 1).join("\n");
 }
 
 function sanitizeSourceMap(map) {

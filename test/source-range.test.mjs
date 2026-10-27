@@ -38,6 +38,8 @@ test("preserves compiler SFC boundaries with CRLF, astral text and adjacent tags
   assert.ok(style);
   assert.deepEqual(template.range.start, positionAt(source, source.indexOf("<!--")));
   assert.deepEqual(template.range.end, positionAt(source, source.indexOf("</template>")));
+  // <lang><zh-CN>编译器 loc offset 精确切出内容，CRLF 和非 BMP 前缀不会把同行外部文本带入块。</zh-CN><en>Compiler loc offsets slice exact content even with CRLF and astral prefixes, without taking outside same-line text.</en></lang>
+  assert.equal(source.slice(parsed.descriptor.template.loc.start.offset, parsed.descriptor.template.loc.end.offset), parsed.descriptor.template.content);
   assert.deepEqual(template.range.start, { line: parsed.descriptor.template.loc.start.line, column: parsed.descriptor.template.loc.start.column });
   assert.deepEqual(template.range.end, { line: parsed.descriptor.template.loc.end.line, column: parsed.descriptor.template.loc.end.column });
   assert.deepEqual(style.range.start, { line: parsed.descriptor.styles[0].loc.start.line, column: parsed.descriptor.styles[0].loc.start.column });
@@ -61,6 +63,26 @@ test("preserves compiler SFC boundaries with CRLF, astral text and adjacent tags
   assert.equal(manifest.contractVersion, "1.1.0");
   assert.deepEqual(mapped.sourceRefs[0].range, template.range);
   assert.deepEqual(mapped.sourceRefs[0].rangeConvention, { endBoundary: "exclusive", columnUnit: "utf16-code-unit" });
+});
+
+/** @lang zh-CN 公开夹具的注释偏移必须是 Vue 编译器块内容内零基 UTF-16 位置，而非整个源码行。 @lang en Fixture annotation offsets must be zero-based UTF-16 positions within Vue compiler block content, not a whole source line. */
+test("keeps fixture annotation offsets relative to compiler block content", async () => {
+  // <lang><zh-CN>用原生模板、脚本和样式内容独立核对每个提取注释的起点。</zh-CN><en>Independently check each extracted annotation start against native template, script and style content.</en></lang>
+  const source = await readFile(fileURLToPath(new URL("../fixtures/doc-source-map/vue-sfc/src/components/ProfileCard.vue", import.meta.url)), "utf8");
+  const native = parse(source, { filename: "src/ProfileCard.vue", sourceMap: true });
+  const extraction = extractVueSfc(source, { path: "src/ProfileCard.vue" });
+  const contentByBlockId = new Map([
+    ["block:template:0", native.descriptor.template?.content],
+    ["block:scriptSetup:0", native.descriptor.scriptSetup?.content],
+    ["block:style:0", native.descriptor.styles[0]?.content]
+  ]);
+  assert.equal(extraction.annotations.length, 7);
+  for (const annotation of extraction.annotations) {
+    const content = contentByBlockId.get(annotation.source.blockId);
+    const opener = annotation.source.blockType === "template" ? "<!--" : "/*";
+    assert.equal(typeof content, "string");
+    assert.equal(content.slice(annotation.source.offset).startsWith(opener), true);
+  }
 });
 
 /** @lang zh-CN 无注释组件的人工点仅是回退线索，不能冒充已证实的空范围。 @lang en The artificial point for an undocumented component is a fallback hint, not a proven empty span. */
@@ -118,9 +140,9 @@ function entriesAtProvenUtf16Start(manifest, symbolId, position) {
     && reference.range?.start?.column === position.column));
 }
 
-/** @lang zh-CN 真实未闭合模板的零长 parser 引用仍可按身份查看，但不能按已知位置命中。 @lang en A native point reference from an unclosed template remains discoverable by identity but cannot match a proven position. */
-test("keeps a native zero-length Vue recovery reference unverified", () => {
-  // <lang><zh-CN>两个非空输入改变子元素及模板的闭合状态；注释使恢复路径确有组件引用而非人工无注释回退。</zh-CN><en>The two nonempty inputs change whether the child element and template close; the annotation yields a component reference rather than an undocumented placeholder.</en></lang>
+/** @lang zh-CN 真实未闭合模板被编译器恢复为空内容后，源码中的注释不能越过块边界冒充 parser 引用。 @lang en After compiler recovery makes an unclosed template empty, a source comment cannot cross the block boundary to impersonate a parser reference. */
+test("keeps an empty recovered Vue template as an unverified component fallback", () => {
+  // <lang><zh-CN>两个非空输入改变模板闭合状态；恢复路径只能依据编译器保留的实际块内容读取注释。</zh-CN><en>The two nonempty inputs vary template closure; the recovery path may read annotations only from actual compiler-retained block content.</en></lang>
   const recoveredSource = "<template><!-- @component Card --><div>";
   const completeSource = "<template><!-- @component Card --><div/></template>";
   const sourcePath = "src/Card.vue";
@@ -131,18 +153,19 @@ test("keeps a native zero-length Vue recovery reference unverified", () => {
   const recoveredEntry = recoveredMap.entries.find((entry) => entry.symbolKind === "vue-component");
   const recoveredReference = recoveredEntry?.sourceRefs[0];
 
-  // <lang><zh-CN>实际 compiler-sfc 错误恢复把模板内容压成 1:11 的零长块；写入器必须保留来源且撤销精度。</zh-CN><en>Actual compiler-sfc recovery reduces template content to a point at 1:11; the writer must retain provenance and revoke precision.</en></lang>
+  // <lang><zh-CN>实际 compiler-sfc 恢复把模板内容压成 1:11 的零长块；提取器不得从块外整行拾取注释。</zh-CN><en>Actual compiler-sfc recovery reduces template content to a point at 1:11; the extractor must not pick up a comment from the surrounding line.</en></lang>
   assert.equal(recoveredNative.errors.length, 2);
   assert.equal(recoveredNative.descriptor.template?.content.length, 0);
   assert.deepEqual(recoveredNative.descriptor.template?.loc.start, recoveredNative.descriptor.template?.loc.end);
   assert.ok(recovered.diagnostics.some((diagnostic) => diagnostic.code === "VUE_SFC_PARSE_ERROR"));
+  assert.equal(recovered.annotations.some((annotation) => annotation.tag === "component"), false);
   assert.equal(recoveredMap.contractVersion, "1.1.0");
   assert.equal(recoveredEntry?.symbolId, recovered.symbols.find((symbol) => symbol.kind === "vue-component")?.id);
-  assert.deepEqual(recoveredReference?.range, { start: { line: 1, column: 11 }, end: { line: 1, column: 11 } });
+  assert.deepEqual(recoveredReference?.range, { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } });
   assert.deepEqual(recoveredReference?.rangeConvention, { endBoundary: "unknown", columnUnit: "unknown" });
-  assert.equal(recoveredReference?.rangeSource, "parser");
+  assert.equal(recoveredReference?.rangeSource, "heuristic");
   assert.equal(recoveredReference?.confidence, "low");
-  assert.equal(entriesAtProvenUtf16Start(recoveredMap, recoveredEntry.symbolId, { line: 1, column: 11 }).length, 0);
+  assert.equal(entriesAtProvenUtf16Start(recoveredMap, recoveredEntry.symbolId, { line: 1, column: 1 }).length, 0);
   assert.equal(recoveredMap.entries.filter((entry) => entry.symbolId === recoveredEntry.symbolId).length, 1);
 
   // <lang><zh-CN>完整模板是位置查询正控，确保回归不靠一律拒绝而通过。</zh-CN><en>The complete template is a positive position-query control so blanket rejection cannot pass the regression.</en></lang>
@@ -155,6 +178,93 @@ test("keeps a native zero-length Vue recovery reference unverified", () => {
   assert.deepEqual(completeReference?.range, { start: { line: 1, column: 11 }, end: { line: 1, column: 41 } });
   assert.deepEqual(completeReference?.rangeConvention, { endBoundary: "exclusive", columnUnit: "utf16-code-unit" });
   assert.equal(entriesAtProvenUtf16Start(completeMap, completeEntry.symbolId, { line: 1, column: 11 }).length, 1);
+});
+
+/** @lang zh-CN 空模板后的同行外部注释不能冒充模板内容或已证零长范围。 @lang en A same-line comment after an empty template must not become template content or a proven empty range. */
+test("does not attach a same-line external annotation to an empty template", () => {
+  // <lang><zh-CN>真实 Vue 编译器接受此非空文件；模板内容为空，外部注释在闭合标签之后。</zh-CN><en>The real Vue compiler accepts this nonempty file; template content is empty and the external comment follows the closing tag.</en></lang>
+  const source = "<template></template><!-- @component Outside -->";
+  const sourcePath = "src/Card.vue";
+  const parsed = parse(source, { filename: sourcePath, sourceMap: true });
+  assert.deepEqual(parsed.errors, []);
+  assert.equal(parsed.descriptor.template?.content, "");
+  assert.deepEqual(parsed.descriptor.template?.loc.start, parsed.descriptor.template?.loc.end);
+
+  // <lang><zh-CN>抽取器只能读取块实际内容；无注释组件保留身份，但不得继承模板外标签。</zh-CN><en>The extractor may read only actual block content; the undocumented component retains identity without inheriting the external tag.</en></lang>
+  const extraction = extractVueSfc(source, { path: sourcePath });
+  const component = extraction.symbols.find((symbol) => symbol.kind === "vue-component");
+  assert.ok(component);
+  assert.equal(extraction.annotations.some((annotation) => annotation.tag === "component"), false);
+  assert.equal(component.annotation, null);
+  assert.equal(component.name, "Card");
+
+  // <lang><zh-CN>映射中的人工点继续是未知线索，不能声称排除式空范围有精确坐标。</zh-CN><en>The map's synthetic point remains an unknown hint and cannot claim exact coordinates for an exclusive empty span.</en></lang>
+  const map = createVueSfcDocSourceMap({
+    vueArtifact: extraction,
+    vueDocPath: "Card.vuedoc.json",
+    htmDocPath: "Card.htmdoc.json",
+    cssDocPath: "Card.cssdoc.json",
+    hiaDocumentPath: "Card.hia.json"
+  });
+  const reference = map.entries.find((entry) => entry.symbolKind === "vue-component")?.sourceRefs[0];
+  assert.deepEqual(reference?.rangeConvention, { endBoundary: "unknown", columnUnit: "unknown" });
+  assert.equal(reference?.confidence, "low");
+});
+
+/** @lang zh-CN 同行模板内外都含注释时，真实模板内注释仍应保留并获得已证范围。 @lang en When both inline and external comments share a line, the real in-template annotation remains proven. */
+test("keeps the genuine in-template annotation while excluding a same-line external comment", () => {
+  // <lang><zh-CN>用编译器提供的内容作为独立对照，防止修复变成一律丢弃模板注释。</zh-CN><en>Use compiler content as an independent control so the fix does not discard all template annotations.</en></lang>
+  const source = "<template><!-- @component Inside --><div/></template><!-- @component Outside -->";
+  const sourcePath = "src/Card.vue";
+  const parsed = parse(source, { filename: sourcePath, sourceMap: true });
+  assert.deepEqual(parsed.errors, []);
+  assert.match(parsed.descriptor.template?.content ?? "", /@component Inside/u);
+  assert.doesNotMatch(parsed.descriptor.template?.content ?? "", /@component Outside/u);
+
+  // <lang><zh-CN>抽取结果只含内部组件标签，写入器仍能确认这个正长度模板范围。</zh-CN><en>The extraction contains only the internal component tag, and the writer can still prove this positive-length template range.</en></lang>
+  const extraction = extractVueSfc(source, { path: sourcePath });
+  const component = extraction.symbols.find((symbol) => symbol.kind === "vue-component");
+  assert.equal(component?.name, "Inside");
+  assert.equal(extraction.annotations.filter((annotation) => annotation.tag === "component").length, 1);
+  const map = createVueSfcDocSourceMap({
+    vueArtifact: extraction,
+    vueDocPath: "Card.vuedoc.json",
+    htmDocPath: "Card.htmdoc.json",
+    cssDocPath: "Card.cssdoc.json",
+    hiaDocumentPath: "Card.hia.json"
+  });
+  const reference = map.entries.find((entry) => entry.symbolKind === "vue-component")?.sourceRefs[0];
+  assert.deepEqual(reference?.rangeConvention, { endBoundary: "exclusive", columnUnit: "utf16-code-unit" });
+  assert.deepEqual(reference?.range, extraction.blocks.find((block) => block.type === "template")?.range);
+});
+
+/** @lang zh-CN 即使上游工件错误地把注释放入零长模板，写入器也不能给排他范围已证精度。 @lang en Even if an upstream artifact puts an annotation in a zero-length template, the writer cannot prove an exclusive span. */
+test("downgrades a zero-length annotated template reference", () => {
+  // <lang><zh-CN>先由真实编译器与提取器生成有效工件，再只收紧模板及其注释端点，以隔离写入器的防线。</zh-CN><en>Start with a real compiler/extractor artifact, then tighten only template and annotation endpoints to isolate the writer guard.</en></lang>
+  const source = "<template><!-- @component Card --></template>";
+  const extraction = extractVueSfc(source, { path: "src/Card.vue" });
+  const component = extraction.symbols.find((symbol) => symbol.kind === "vue-component");
+  const template = extraction.blocks.find((block) => block.type === "template");
+  assert.ok(component?.annotation);
+  assert.ok(template);
+  const zeroLength = structuredClone(extraction);
+  const zeroTemplate = zeroLength.blocks.find((block) => block.type === "template");
+  const zeroComponent = zeroLength.symbols.find((symbol) => symbol.kind === "vue-component");
+  zeroTemplate.range.end = { ...zeroTemplate.range.start };
+  zeroComponent.annotation.source.range.end = { ...zeroComponent.annotation.source.range.start };
+  zeroComponent.source.range.end = { ...zeroComponent.source.range.start };
+
+  // <lang><zh-CN>即使元数据一致且无解析错误，排他式零长范围仍只能作为未知来源线索。</zh-CN><en>Even with matching metadata and no parse error, an exclusive zero-length span is only an unknown provenance hint.</en></lang>
+  const map = createVueSfcDocSourceMap({
+    vueArtifact: zeroLength,
+    vueDocPath: "Card.vuedoc.json",
+    htmDocPath: "Card.htmdoc.json",
+    cssDocPath: "Card.cssdoc.json",
+    hiaDocumentPath: "Card.hia.json"
+  });
+  const reference = map.entries.find((entry) => entry.symbolKind === "vue-component")?.sourceRefs[0];
+  assert.deepEqual(reference?.rangeConvention, { endBoundary: "unknown", columnUnit: "unknown" });
+  assert.equal(reference?.confidence, "low");
 });
 
 /** @lang zh-CN 只把已测模板注释提升为精确坐标；脚本、样式和宏保留真实来源与未知边界。 @lang en Only the measured template annotation gets exact coordinates; script, style and macro retain their origin and unknown boundaries. */

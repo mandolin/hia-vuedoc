@@ -155,8 +155,8 @@ export function createVueSfcDocSourceMap(options) {
 }
 
 /**
- * @lang zh-CN 按单个符号的实际来源声明范围约定，保留无注释符号且不制造缺失的 annotation。
- * @lang en Declares range convention from each symbol's actual origin, retaining undocumented symbols without inventing annotations.
+ * @lang zh-CN 按单个符号的实际来源声明范围约定；排他式零长模板不能获得已证精度，无注释符号仍保留身份。
+ * @lang en Declares range convention from each symbol's actual origin; an exclusive empty template cannot receive proven precision, while undocumented symbols retain identity.
  * @param {object} symbol <lang><zh-CN>提取符号，可能来自注释、宏或人工回退。</zh-CN><en>Extracted symbol from an annotation, macro or artificial fallback.</en></lang>
  * @param {number} index <lang><zh-CN>符号在提取件中的稳定数组索引。</zh-CN><en>Stable symbol array index in the extraction artifact.</en></lang>
  * @param {object} vueArtifact <lang><zh-CN>用于核对生产者、块身份及解析诊断的提取工件。</zh-CN><en>Extraction artifact used to verify producer, block identity and parse diagnostics.</en></lang>
@@ -240,7 +240,8 @@ function provenTemplateRange(artifact, symbol, range) {
     || symbol.annotation?.source?.blockType !== "template"
     || symbol.source?.rangeSource !== "vue-sfc-parser"
     || symbol.source?.path !== artifact.source?.path
-    || !hasCompleteColumns(range)) {
+    || !hasCompleteColumns(range)
+    || !hasPositiveExtent(range)) {
     return false;
   }
 
@@ -256,6 +257,17 @@ function provenTemplateRange(artifact, symbol, range) {
 function hasCompleteColumns(range) {
   return [range?.start?.line, range?.start?.column, range?.end?.line, range?.end?.column]
     .every((value) => Number.isSafeInteger(value) && value > 0);
+}
+
+/**
+ * @lang zh-CN 仅正长度的半开模板范围可被证明；同端点是空范围，反向端点也不得提升。
+ * @lang en Only a positive-length half-open template span can be proven; equal endpoints are empty and reversed endpoints cannot be promoted.
+ * @param {object} range <lang><zh-CN>已具有完整一基行列的模板范围。</zh-CN><en>Template range with complete one-based line and column positions.</en></lang>
+ * @returns {boolean} <lang><zh-CN>终点严格晚于起点。</zh-CN><en>Whether the end is strictly after the start.</en></lang>
+ */
+function hasPositiveExtent(range) {
+  return range.start.line < range.end.line
+    || (range.start.line === range.end.line && range.start.column < range.end.column);
 }
 
 /** @lang zh-CN 核对符号来源范围与其模板块的四个端点数值。 @lang en Compares all four endpoint numbers of a symbol source range and its template block. */

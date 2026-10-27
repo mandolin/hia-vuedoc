@@ -74,7 +74,7 @@ export function createVueSfcDocSourceMap(options) {
       to: "artifact:vue-template:render",
       transform: "@vue/compiler-sfc:compileTemplate",
       sourceMap: templateMapPath ? "sourcemap:vue-template" : null,
-      // <lang><zh-CN>模板生成边不承接脚本宏或样式符号；无注释组件仍是模板级关联。</zh-CN><en>The template stage does not claim script macros or style symbols; an undocumented component still has a template-level relation.</en></lang>
+      // <lang><zh-CN>生成边按注释所在块归属；无注释组件仍是模板级回退。</zh-CN><en>A generated stage follows the annotation's actual block; an undocumented component remains a template-level fallback.</en></lang>
       linkage: vueArtifact.symbols.filter((symbol) => symbol.annotation?.source?.blockType === "template" || (symbol.kind === "vue-component" && !symbol.annotation)).map((symbol) => entryIdForSymbol(symbol))
     });
   }
@@ -84,7 +84,7 @@ export function createVueSfcDocSourceMap(options) {
       to: "artifact:vue-script:compiled",
       transform: "@vue/compiler-sfc:compileScript",
       sourceMap: scriptMapPath ? "sourcemap:vue-script" : null,
-      linkage: vueArtifact.symbols.filter((symbol) => symbol.kind === "vue-exposed-api" || ["script", "scriptSetup"].includes(symbol.annotation?.source?.blockType)).map((symbol) => entryIdForSymbol(symbol))
+      linkage: vueArtifact.symbols.filter((symbol) => ["script", "scriptSetup"].includes(symbol.annotation?.source?.blockType) || (symbol.kind === "vue-exposed-api" && !symbol.annotation)).map((symbol) => entryIdForSymbol(symbol))
     });
   }
   if (stylePath) {
@@ -93,7 +93,7 @@ export function createVueSfcDocSourceMap(options) {
       to: "artifact:vue-style:compiled",
       transform: "@vue/compiler-sfc:compileStyle",
       sourceMap: styleMapPath ? "sourcemap:vue-style" : null,
-      linkage: vueArtifact.symbols.filter((symbol) => symbol.kind.startsWith("css-")).map((symbol) => entryIdForSymbol(symbol))
+      linkage: vueArtifact.symbols.filter((symbol) => symbol.annotation?.source?.blockType === "style").map((symbol) => entryIdForSymbol(symbol))
     });
   }
   stages.push({
@@ -199,16 +199,16 @@ function createSymbolEntry(symbol, index, vueArtifact, outputPaths) {
 }
 
 /**
- * @lang zh-CN 将提取器的具体来源名映射到七类公共机制，同时保留原名细节；未知机制不猜测。
- * @lang en Maps extractor-specific origin names to the seven common mechanisms while preserving details; unknown mechanisms are not guessed.
+ * @lang zh-CN 将提取器的具体来源名映射到七类公共机制；仅输出固定的公开安全细节，不复制外来名称。
+ * @lang en Maps extractor-specific origins to the seven common mechanisms; emits only fixed public-safe details instead of copying external names.
  * @param {object} artifact <lang><zh-CN>提取工件及其生产者。</zh-CN><en>Extraction artifact and its producer.</en></lang>
  * @param {object} symbol <lang><zh-CN>带原始来源标签的符号。</zh-CN><en>Symbol with its original origin label.</en></lang>
  * @returns {{rangeSource:string,rangeSourceDetail:string}} <lang><zh-CN>结构化来源类别与具体细节。</zh-CN><en>Structured origin mechanism and specific detail.</en></lang>
  */
 function sourceProvenance(artifact, symbol) {
-  // <lang><zh-CN>外来工件的内部标签未由本提取器验证，归为适配器输入并保留生产者名。</zh-CN><en>An external artifact's internal label is unverified by this extractor, so treat it as adapter input and retain the producer name.</en></lang>
+  // <lang><zh-CN>外来工件的自报名称可能是私有路径或账号信息；只保留固定的适配器类别。</zh-CN><en>A foreign artifact's self-reported name may contain a private path or account data; retain only a fixed adapter category.</en></lang>
   if (artifact.producer?.name !== "@hia-doc/vue-sfc-extractor") {
-    return { rangeSource: "adapter", rangeSourceDetail: nonBlankDetail(artifact.producer?.name, "external-vue-artifact") };
+    return { rangeSource: "adapter", rangeSourceDetail: "external-vue-artifact" };
   }
   if (symbol.kind === "vue-component" && !symbol.annotation && symbol.source?.confidence === "low") {
     return { rangeSource: "heuristic", rangeSourceDetail: "vue-component-fallback" };
@@ -219,12 +219,8 @@ function sourceProvenance(artifact, symbol) {
   if (symbol.source?.rangeSource === "vue-sfc-parser") {
     return { rangeSource: "parser", rangeSourceDetail: "vue-sfc-parser" };
   }
-  return { rangeSource: "unresolved", rangeSourceDetail: nonBlankDetail(symbol.source?.rangeSource, "unspecified-vue-source") };
-}
-
-/** @lang zh-CN 来源细节至少含一个非空白字符，避免原始适配器标签破坏新版 schema。 @lang en Requires a nonblank provenance detail so raw adapter labels cannot invalidate the current schema. */
-function nonBlankDetail(value, fallback) {
-  return typeof value === "string" && /\S/u.test(value) ? value : fallback;
+  // <lang><zh-CN>未知标签同样不能原样进入公开工件，即使工件自报了本地生产者名称。</zh-CN><en>An unknown label also must not enter the public artifact verbatim, even when the artifact claims the local producer name.</en></lang>
+  return { rangeSource: "unresolved", rangeSourceDetail: "unrecognized-vue-source" };
 }
 
 /**
@@ -278,7 +274,9 @@ function sameRange(left, right) {
  * @returns {object} <lang><zh-CN>不悬空的产物引用。</zh-CN><en>Non-dangling artifact reference.</en></lang>
  */
 function artifactRefForSymbol(symbol, index, outputPaths) {
-  if (symbol.kind.startsWith("css-") && outputPaths.stylePath) {
+  // <lang><zh-CN>产物引用与生成链用同一块身份，避免把脚本注释放到模板或样式输出；缺失对应输出时退回提取符号。</zh-CN><en>Artifact references and stages use the same block identity, avoiding script comments being assigned to template or style output; missing output falls back to the extracted symbol.</en></lang>
+  const blockType = symbol.annotation?.source?.blockType;
+  if (blockType === "style" && outputPaths.stylePath) {
     return {
       artifactId: "artifact:vue-style:compiled",
       ...(symbol.kind === "css-selector" && symbol.name ? { selector: symbol.name } : {}),
@@ -286,14 +284,14 @@ function artifactRefForSymbol(symbol, index, outputPaths) {
       confidence: "medium"
     };
   }
-  if (symbol.kind === "vue-exposed-api" && outputPaths.scriptPath) {
+  if ((["script", "scriptSetup"].includes(blockType) || (symbol.kind === "vue-exposed-api" && !symbol.annotation)) && outputPaths.scriptPath) {
     return {
       artifactId: "artifact:vue-script:compiled",
       rangeSource: "source-map",
       confidence: "medium"
     };
   }
-  if (outputPaths.templatePath && !symbol.kind.startsWith("css-") && symbol.kind !== "vue-exposed-api") {
+  if ((blockType === "template" || (symbol.kind === "vue-component" && !symbol.annotation)) && outputPaths.templatePath) {
     return {
       artifactId: "artifact:vue-template:render",
       ...(symbol.kind === "vue-component" ? { selector: `[data-component="${symbol.name}"]` } : {}),

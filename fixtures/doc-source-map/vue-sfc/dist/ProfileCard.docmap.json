@@ -347,7 +347,7 @@
       ],
       "artifactRefs": [
         {
-          "artifactId": "artifact:vue-template:render",
+          "artifactId": "artifact:vue-script:compiled",
           "rangeSource": "source-map",
           "confidence": "medium"
         }

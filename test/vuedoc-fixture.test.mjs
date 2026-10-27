@@ -97,6 +97,15 @@ describe("Vue SFC bridge", () => {
     assert.equal(docMap.contractVersion, "1.1.0");
     assert.equal(hia.metadata.docSourceMaps[0].contractVersion, docMap.contractVersion);
     assert.ok(docMap.sourceMaps.length >= 2);
+    // <lang><zh-CN>本仓实际夹具的 CSS 符号都来自 style 注释；按块归属后仍须链接到已产出的样式文件。</zh-CN><en>The real fixture's CSS symbols all originate from style annotations and must still link to the emitted style file after block-based routing.</en></lang>
+    const styleSymbols = artifact.symbols.filter((symbol) => symbol.kind.startsWith("css-"));
+    const styleStage = docMap.chains[0].stages.find((stage) => stage.to === "artifact:vue-style:compiled");
+    assert.equal(styleSymbols.length, 2);
+    assert.ok(styleSymbols.every((symbol) => symbol.annotation?.source?.blockType === "style"));
+    assert.ok(styleSymbols.every((symbol) => {
+      const entry = docMap.entries.find((item) => item.symbolId === symbol.id);
+      return entry?.artifactRefs[0]?.artifactId === "artifact:vue-style:compiled" && styleStage?.linkage.includes(entry.id);
+    }));
   });
 
   it("runs the VueDoc producer adapter from a documentation producer request", async () => {

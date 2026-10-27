@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { vueDocToCssExtraction, vueDocToHiaDocument, vueDocToHtmlExtraction } from "@hia-doc/vue-sfc-bridge";
@@ -8,6 +8,7 @@ import {
   VUEDOC_EXTRACTION_CONTRACT,
   VUEDOC_EXTRACTION_CONTRACT_VERSION
 } from "@hia-doc/vuedoc-spec";
+import { createVueTemplateCoordinateProfile, decodeCoordinateSource } from "./coordinate-profile.mjs";
 
 /**
  * Declares the runtime version of the VueDoc producer adapter.
@@ -42,7 +43,8 @@ export const VUEDOC_OUTPUT_KINDS = Object.freeze([
   "htmdoc-extraction",
   "cssdoc-extraction",
   "hia-document",
-  "doc-source-map"
+  "doc-source-map",
+  "ordinary-source-map-coordinate-profile"
 ]);
 
 const RESULT_CONTRACT = "documentation-producer-result";
@@ -88,9 +90,25 @@ export const vuedocProducer = Object.freeze({
 
 export default vuedocProducer;
 
+/**
+ * @lang zh-CN 执行多输入 Vue 生产：严格侧载模式先核输出根，逐输入失败只进入诊断；成功工件与当前结果清单同步。
+ * @lang en Runs multi-input Vue production: strict sidecar mode checks the output root first, per-input failures become diagnostics, and successful artifacts feed the current result manifest.
+ * @param {object} request 未规范化的生产请求 / Unnormalized producer request.
+ * @param {object} [context] 可选取消与进度适配器 / Optional cancellation and progress adapter.
+ * @returns {Promise<object>} 本次生产结果；侧载默认关闭 / This run's producer result; the sidecar is off by default.
+ * @throws {TypeError} 请求非法或严格输出根越界；结果清单 I/O 异常可继续抛出 / Invalid request or escaped strict output root; result-manifest I/O can also throw.
+ */
 async function runVueDoc(request, context = {}) {
   const normalized = normalizeRequest(request);
-  await mkdir(normalized.outputDirectory, { recursive: true });
+  // <lang><zh-CN>可选证据在第一次建目录前逐级拒绝外部路径和链接，避免失败签发前已越界写入。</zh-CN><en>Before the first opt-in directory write, walk and reject external paths or links so a failed proof cannot have written outside the workspace.</en></lang>
+  if (normalized.options.emitCoordinateProfile) {
+    await ensureCoordinateDirectory(normalized.workspaceRoot, normalized.outputDirectory);
+    if (normalized.options.writeResultManifest) {
+      await assertSafeOutputFile(normalized.outputDirectory, "vuedoc.producer-result.json");
+    }
+  } else {
+    await mkdir(normalized.outputDirectory, { recursive: true });
+  }
 
   const artifacts = [];
   const diagnostics = [];
@@ -150,10 +168,39 @@ async function runVueDoc(request, context = {}) {
   return result;
 }
 
+/**
+ * @lang zh-CN 处理单一 Vue SFC，先撤销旧侧载，再从同一源码快照生成桥接/地图；仅在模板证据通过后最后写无正文侧载。
+ * @lang en Processes one Vue SFC, revoking old evidence first, generating bridges/maps from one source snapshot and writing the body-free sidecar last only after template proof passes.
+ * @param {object} input 已核安全相对来源 / Validated safe-relative input.
+ * @param {object} request 已规范化生产请求 / Normalized producer request.
+ * @param {number} index 本次输入的零基序号 / Zero-based input index for this run.
+ * @returns {Promise<{artifacts:object[],diagnostics:object[]}>} 仅成功输入的工件和诊断 / Artifacts and diagnostics for a successful input.
+ * @throws {TypeError} 严格来源、路径、编译图或身份不能证明时拒绝签发 / Refuses proof when strict source, path, compiled map or identity cannot be established.
+ */
 async function processInput(input, request, index) {
   const sourcePath = input.path;
-  const source = await readFile(path.resolve(request.workspaceRoot, sourcePath), "utf8");
   const basePath = outputBasePath(input, index);
+  // <lang><zh-CN>每次处理本输入先撤销旧侧载；即使随后源码缺失或拒绝，也不能留下冒充新地图的证明。</zh-CN><en>Revoke this input's old sidecar first, even when source reading later fails, so no old proof survives a rebuild.</en></lang>
+  const coordinateProfilePath = `${basePath}.coordinate-profile.json`;
+  const absoluteCoordinateProfilePath = path.join(request.outputDirectory, coordinateProfilePath);
+  // <lang><zh-CN>严格模式在首次撤销或写入前核所有同基名输出文件，阻止预存文件链接跳出输出根。</zh-CN><en>Before strict revocation or writing, preflight every same-base output path so existing file links cannot redirect outside the output root.</en></lang>
+  if (request.options.emitCoordinateProfile) {
+    for (const suffix of [".vuedoc.json", ".htmdoc.json", ".cssdoc.json", ".hia.json", ".docmap.json",
+      ".coordinate-profile.json", ".template.js", ".template.js.map", ".script.js", ".script.js.map", ".style.css", ".style.css.map"]) {
+      await assertSafeOutputFile(request.outputDirectory, `${basePath}${suffix}`);
+    }
+  } else {
+    await assertSafeOutputFile(request.outputDirectory, coordinateProfilePath);
+  }
+  await rm(absoluteCoordinateProfilePath, { force: true });
+  // <lang><zh-CN>可选坐标证据用严格 UTF-8 原始字节作为本轮提取、编译与摘要共用的不可变快照。</zh-CN><en>Optional coordinate evidence shares one strictly decoded raw-byte snapshot across extraction, compilation and digests.</en></lang>
+  const absoluteSourcePath = path.resolve(request.workspaceRoot, sourcePath);
+  if (request.options.emitCoordinateProfile) {
+    await assertContainedRealPath(request.workspaceRoot, absoluteSourcePath);
+    await assertContainedRealPath(request.workspaceRoot, request.outputDirectory);
+  }
+  const sourceBytes = request.options.emitCoordinateProfile ? await readFile(absoluteSourcePath) : null;
+  const source = sourceBytes ? decodeCoordinateSource(sourceBytes) : await readFile(absoluteSourcePath, "utf8");
   const vueDocPath = `${basePath}.vuedoc.json`;
   const htmDocPath = `${basePath}.htmdoc.json`;
   const cssDocPath = `${basePath}.cssdoc.json`;
@@ -201,6 +248,36 @@ async function processInput(input, request, index) {
     await writeJson(path.join(request.outputDirectory, docSourceMapPath), docSourceMap);
   }
 
+  // <lang><zh-CN>只在模板普通图与文档图均由本轮实际写出、源码快照仍相同时构造侧载；script/style 保持未核。</zh-CN><en>Create a sidecar only after the template ordinary map and documentation map are actually written and the source snapshot still matches; script/style remain unverified.</en></lang>
+  if (request.options.emitCoordinateProfile) {
+    const templateOutput = compiled.outputs.find((output) => output.kind === "template-render");
+    if (!templateOutput?.map || !outputRefs.templateMapPath || !docSourceMap || !sourceBytes
+      || compiled.errors.length > 0 || templateOutput.errors.length > 0
+      || !Buffer.from(await readFile(absoluteSourcePath)).equals(sourceBytes)) {
+      throw new TypeError("Coordinate template lacks same-build source and maps.");
+    }
+    await assertContainedRealPath(request.outputDirectory, path.join(request.outputDirectory, outputRefs.templateMapPath));
+    await assertContainedRealPath(request.outputDirectory, path.join(request.outputDirectory, docSourceMapPath));
+    const profile = createVueTemplateCoordinateProfile({
+      sourceBytes,
+      sourceText: source,
+      sourcePath,
+      templateBlock: compiled.descriptor.template,
+      ordinaryMap: templateOutput.map,
+      ordinaryMapBytes: await readFile(path.join(request.outputDirectory, outputRefs.templateMapPath)),
+      documentationMap: docSourceMap,
+      documentationMapBytes: await readFile(path.join(request.outputDirectory, docSourceMapPath)),
+      inputIndex: index
+    });
+    try {
+      await writeJson(absoluteCoordinateProfilePath, profile);
+    } catch (error) {
+      // <lang><zh-CN>侧载若只写入部分字节，不能把半成品留在下一次消费路径。</zh-CN><en>If sidecar I/O wrote only partial bytes, keep no incomplete profile at the consumer path.</en></lang>
+      await rm(absoluteCoordinateProfilePath, { force: true });
+      throw error;
+    }
+  }
+
   const artifactIdBase = `input-${index + 1}`;
   const artifacts = [
     ...compiledOutputArtifacts(outputRefs, artifactIdBase, request.profileIds),
@@ -227,6 +304,13 @@ async function processInput(input, request, index) {
       ...artifact(`${artifactIdBase}-doc-source-map`, "doc-source-map", docSourceMapPath, "json", "application/json", request.profileIds),
       contract: "doc-source-map",
       contractVersion: docSourceMap.contractVersion
+    });
+  }
+  if (request.options.emitCoordinateProfile) {
+    artifacts.push({
+      ...artifact(`${artifactIdBase}-coordinate-profile`, "ordinary-source-map-coordinate-profile", coordinateProfilePath, "json", "application/json", request.profileIds),
+      contract: "ordinary-source-map-coordinate-profile",
+      contractVersion: "0.1.0-draft"
     });
   }
 
@@ -289,6 +373,13 @@ function compiledOutputArtifacts(outputRefs, artifactIdBase, profileIds) {
   return artifacts;
 }
 
+/**
+ * @lang zh-CN 规范化 Vue producer 请求；坐标侧载必须显式布尔开启，并依赖文档图与无正文隐私策略。
+ * @lang en Normalizes a Vue producer request; coordinate evidence requires an explicit boolean plus a documentation map and no-body privacy policy.
+ * @param {unknown} value 外部请求 / External request.
+ * @returns {object} 具有绝对运行目录和保守选项默认值的请求 / Request with absolute runtime directories and conservative option defaults.
+ * @throws {TypeError} 输入路径、身份、选项或证据依赖非法 / Invalid input path, identity, option or evidence prerequisite.
+ */
 function normalizeRequest(value) {
   assertRecord(value, "VueDoc producer request must be an object.");
   assertAbsoluteDirectory(value.workspaceRoot, "workspaceRoot");
@@ -314,10 +405,16 @@ function normalizeRequest(value) {
 
   const options = value.options ?? {};
   assertRecord(options, "options must be an object.");
-  assertKnownKeys(options, ["componentId", "emitDocSourceMap", "sourcesContentPolicy", "writeResultManifest"], "options");
+  assertKnownKeys(options, ["componentId", "emitDocSourceMap", "emitCoordinateProfile", "sourcesContentPolicy", "writeResultManifest"], "options");
   const sourcesContentPolicy = options.sourcesContentPolicy ?? "none";
   if (!["none", "reference", "embed"].includes(sourcesContentPolicy)) {
     throw new TypeError(`Unsupported sourcesContentPolicy: ${sourcesContentPolicy}`);
+  }
+  if (options.emitCoordinateProfile !== undefined && typeof options.emitCoordinateProfile !== "boolean") {
+    throw new TypeError("emitCoordinateProfile must be a boolean.");
+  }
+  if (options.emitCoordinateProfile === true && (options.emitDocSourceMap === false || sourcesContentPolicy !== "none")) {
+    throw new TypeError("Coordinate profile requires doc-source-map and sourcesContentPolicy none.");
   }
   const profileIds = value.profileIds ?? ["htmdoc", "cssdoc", "doc-source-map"];
   if (!Array.isArray(profileIds) || profileIds.length === 0 || profileIds.some((id) => typeof id !== "string" || !SAFE_ID_PATTERN.test(id))) {
@@ -332,10 +429,89 @@ function normalizeRequest(value) {
     options: {
       componentId: typeof options.componentId === "string" ? options.componentId : null,
       emitDocSourceMap: options.emitDocSourceMap !== false,
+      emitCoordinateProfile: options.emitCoordinateProfile === true,
       sourcesContentPolicy,
       writeResultManifest: options.writeResultManifest !== false
     }
   };
+}
+
+/**
+ * @lang zh-CN 为可选证明核真实路径仍在获准根内，防止相对输入或输出符号链接绕过边界。
+ * @lang en Checks that a real path remains within its authorized root for optional evidence, rejecting symlink escapes.
+ * @param {string} root 获准根 / Authorized root.
+ * @param {string} candidate 待核已存在路径 / Existing path to verify.
+ * @returns {Promise<void>} 成功时无值 / Resolves without a value on success.
+ * @throws {TypeError} 路径越界 / Path escapes the root.
+ */
+async function assertContainedRealPath(root, candidate) {
+  const relative = path.relative(await realpath(root), await realpath(candidate));
+  if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throw new TypeError("Coordinate path escapes its authorized root.");
+  }
+}
+
+/**
+ * @lang zh-CN 从已存在且获准的根逐级检查/建立输出目录，拒绝词法越界、符号链接、junction 与非目录组件。
+ * @lang en Checks or creates output directories component by component from an existing authorized root, rejecting lexical escapes, links, junctions and nondirectories.
+ * @param {string} baseDirectory 已存在的获准目录 / Existing authorized directory.
+ * @param {string} targetDirectory 待建或待核目录 / Directory to create or verify.
+ * @returns {Promise<void>} 每级都在真实根内 / Every component remains within the real root.
+ * @throws {TypeError} 越界、链接或非目录 / Escape, link or nondirectory.
+ */
+async function ensureCoordinateDirectory(baseDirectory, targetDirectory) {
+  const base = path.resolve(baseDirectory);
+  const target = path.resolve(targetDirectory);
+  const relative = path.relative(base, target);
+  if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throw new TypeError("Coordinate output escapes its authorized root.");
+  }
+  const baseReal = await realpath(base);
+  let current = base;
+  for (const segment of relative.split(path.sep).filter(Boolean)) {
+    current = path.join(current, segment);
+    let state;
+    try {
+      state = await lstat(current);
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+      await mkdir(current);
+      state = await lstat(current);
+    }
+    if (state.isSymbolicLink() || !state.isDirectory()) {
+      throw new TypeError("Coordinate output contains a linked or non-directory component.");
+    }
+    const actual = await realpath(current);
+    const actualRelative = path.relative(baseReal, actual);
+    if (actualRelative === ".." || actualRelative.startsWith(`..${path.sep}`) || path.isAbsolute(actualRelative)) {
+      throw new TypeError("Coordinate output redirects outside its authorized root.");
+    }
+  }
+}
+
+/**
+ * @lang zh-CN 写文件或撤销旧侧载前检查父目录与现存文件，避免通过预存链接写出工作区。
+ * @lang en Checks parent directories and any existing file before writing or revoking a sidecar, preventing pre-existing links from redirecting output.
+ * @param {string} outputDirectory 输出根 / Output root.
+ * @param {string} relativeFile 输出根内的工件路径 / Artifact path below the output root.
+ * @returns {Promise<void>} 静态路径预检通过 / Static path preflight succeeds.
+ * @throws {TypeError} 路径越界或链接 / Path escape or link.
+ */
+async function assertSafeOutputFile(outputDirectory, relativeFile) {
+  const absoluteFile = path.resolve(outputDirectory, relativeFile);
+  const relative = path.relative(path.resolve(outputDirectory), absoluteFile);
+  if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throw new TypeError("Coordinate artifact escapes its output root.");
+  }
+  await ensureCoordinateDirectory(outputDirectory, path.dirname(absoluteFile));
+  try {
+    const state = await lstat(absoluteFile);
+    if (state.isSymbolicLink() || !state.isFile()) {
+      throw new TypeError("Coordinate artifact is a linked or non-file output.");
+    }
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
 }
 
 function outputBasePath(input, index) {

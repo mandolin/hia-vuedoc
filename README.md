@@ -20,6 +20,8 @@ synthetic placeholders and external input remain explicitly unknown until their
 coordinate behavior is verified. The HIA document and producer result identify
 the emitted map version; disabling map output removes their map links.
 
+The VueDoc runner accepts `options.emitCoordinateProfile: true` or `--coordinate-profile` to emit a separate `ordinary-source-map-coordinate-profile@0.1.0-draft` for a proven native template slot. This is disabled by default. Inline and preprocessed templates are rejected for this option; script and style source-map columns stay unverified. The sidecar alone does not grant source access or establish an exact anchor: the consuming host must check the two actual maps and authorized SFC bytes. See the producer package README for the precise input boundary.
+
 ## Fixture
 
 ```powershell

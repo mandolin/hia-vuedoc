@@ -43,6 +43,9 @@ async function main() {
       "emit-doc-source-map": {
         type: "boolean"
       },
+      "coordinate-profile": {
+        type: "boolean"
+      },
       "no-doc-source-map": {
         type: "boolean"
       },
@@ -75,6 +78,12 @@ async function main() {
   }
 }
 
+/**
+ * @lang zh-CN 将显式 CLI 值投影为 runner 覆写；坐标开关未出现时不改变默认产物。
+ * @lang en Projects explicit CLI values into runner overrides; absent coordinate flag leaves default output unchanged.
+ * @param {object} values `parseArgs` 的值 / Values returned by `parseArgs`.
+ * @returns {object} 仅含已声明覆盖项的对象 / Object containing only declared overrides.
+ */
 function createCliOverrides(values) {
   const overrides = {};
   const optionOverrides = {};
@@ -96,6 +105,10 @@ function createCliOverrides(values) {
   }
   if (values["emit-doc-source-map"] === true) {
     optionOverrides.emitDocSourceMap = true;
+  }
+  if (values["coordinate-profile"] === true) {
+    // <lang><zh-CN>仅显式 CLI 开关开启模板坐标侧载，默认 CLI 产物保持原样。</zh-CN><en>Only an explicit CLI flag enables the template sidecar; default CLI output remains unchanged.</en></lang>
+    optionOverrides.emitCoordinateProfile = true;
   }
   if (values["no-doc-source-map"] === true) {
     optionOverrides.emitDocSourceMap = false;

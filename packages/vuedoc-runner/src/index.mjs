@@ -157,16 +157,30 @@ function normalizeInput(value, index) {
   };
 }
 
+/**
+ * @lang zh-CN 规范化 runner 的选项；显式坐标侧载必须有文档图且不嵌来源正文。
+ * @lang en Normalizes runner options; explicit coordinate evidence requires a documentation map without embedded source body.
+ * @param {unknown} value 未验证的配置选项 / Unvalidated configuration options.
+ * @returns {object} 具有关闭侧载默认值的选项 / Options with sidecar disabled by default.
+ * @throws {TypeError} 未知、类型错误或相互冲突的选项 / Unknown, mistyped or conflicting options.
+ */
 function normalizeOptions(value) {
   assertRecord(value, "options must be an object.");
-  assertKnownKeys(value, ["componentId", "emitDocSourceMap", "sourcesContentPolicy", "writeResultManifest"], "options");
+  assertKnownKeys(value, ["componentId", "emitDocSourceMap", "emitCoordinateProfile", "sourcesContentPolicy", "writeResultManifest"], "options");
   const sourcesContentPolicy = value.sourcesContentPolicy ?? "none";
   if (!["none", "reference", "embed"].includes(sourcesContentPolicy)) {
     throw new TypeError(`Unsupported sourcesContentPolicy: ${sourcesContentPolicy}`);
   }
+  if (value.emitCoordinateProfile !== undefined && typeof value.emitCoordinateProfile !== "boolean") {
+    throw new TypeError("emitCoordinateProfile must be a boolean.");
+  }
+  if (value.emitCoordinateProfile === true && (value.emitDocSourceMap === false || sourcesContentPolicy !== "none")) {
+    throw new TypeError("Coordinate profile requires doc-source-map and sourcesContentPolicy none.");
+  }
   return {
     componentId: typeof value.componentId === "string" ? value.componentId : null,
     emitDocSourceMap: value.emitDocSourceMap !== false,
+    emitCoordinateProfile: value.emitCoordinateProfile === true,
     sourcesContentPolicy,
     writeResultManifest: value.writeResultManifest !== false
   };

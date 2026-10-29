@@ -1,13 +1,13 @@
 {
   "contract": "hia-cssdoc-extraction",
-  "contractVersion": "0.1.0-draft",
+  "contractVersion": "1.0.0",
   "producer": {
     "name": "@hia-doc/vue-sfc-bridge",
     "version": "0.0.0"
   },
   "profile": {
     "name": "vue-sfc-cssdoc-bridge",
-    "version": "0.1.0-draft"
+    "version": "1.0.0"
   },
   "defaultLocale": "en",
   "locales": [

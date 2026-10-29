@@ -92,6 +92,10 @@ describe("Vue SFC bridge", () => {
 
     assert.equal(htmDoc.contract, "hia-htmdoc-extraction");
     assert.equal(cssDoc.contract, "hia-cssdoc-extraction");
+    // <lang><zh-CN>CSS工件/profile按已确认迁移配对升级；HTM与Vue自己的身份保持。</zh-CN><en>CSS artifact/profile upgrade as the approved pair; HTML and Vue identities stay unchanged.</en></lang>
+    assert.equal(cssDoc.contractVersion, "1.0.0");
+    assert.equal(cssDoc.profile.version, "1.0.0");
+    assert.equal(htmDoc.contractVersion, "0.1.0-draft");
     assert.equal(hia.schemaVersion, "0.2.0");
     assert.equal(docMap.contract, "doc-source-map");
     assert.equal(docMap.contractVersion, "1.1.0");

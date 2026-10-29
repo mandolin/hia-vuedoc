@@ -1,0 +1,29 @@
+# 中文：验证CSS契约协调触及的真实Vue生成链，不发布软件包。
+# English: Validates the real Vue generation chain touched by CSS contract coordination without package publication.
+name: CSS contract compatibility
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compatibility:
+    name: Vue gate / ${{ matrix.os }} / Node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [22.23.4, 24.22.1]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+      - name: Install frozen dependencies
+        run: npm ci --registry=https://registry.npmjs.org/
+      - name: Run Vue generation and compatibility gate
+        run: npm run release:gate

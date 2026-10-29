@@ -65,25 +65,36 @@ export function vueDocToHtmlExtraction(vueArtifact, options = {}) {
   };
 }
 
+/**
+ * @lang zh-CN 将现有Vue样式子集投影为CSS提取1.0.0与配对profile，不改变原Vue工件或HTM桥接身份。
+ * @lang en Projects the existing Vue style subset into CSS extraction1.0.0 and its paired profile without changing the Vue artifact or HTML bridge identity.
+ * @param {object} vueArtifact <lang><zh-CN>已支持的Vue提取对象。</zh-CN><en>Supported Vue extraction object.</en></lang>
+ * @param {object} [options] <lang><zh-CN>样式路径与语言覆写。</zh-CN><en>Style path and locale overrides.</en></lang>
+ * @returns {object} <lang><zh-CN>新CSS对象，省略未定义可选字段，嵌套i18n/annotation仍共享；无I/O。</zh-CN><en>Fresh CSS object omitting undefined optionals, with shared nested i18n/annotation and no I/O.</en></lang>
+ * @throws {Error} <lang><zh-CN>不支持的Vue工件或路径。</zh-CN><en>Unsupported Vue artifact or path.</en></lang>
+ */
 export function vueDocToCssExtraction(vueArtifact, options = {}) {
   assertVueDocArtifact(vueArtifact);
+  // <lang><zh-CN>样式定位只规范化字符串，不读取生成文件。</zh-CN><en>The style locator only normalizes a string without reading generated files.</en></lang>
   const stylePath = normalizePath(options.stylePath ?? vueArtifact.source.path);
+  // <lang><zh-CN>显式语言优先于已提取默认；不会重新解析注释。</zh-CN><en>Explicit locale precedes the extracted default without reparsing comments.</en></lang>
   const defaultLocale = options.defaultLocale ?? vueArtifact.defaultLocale ?? "en";
+  // <lang><zh-CN>仅现有css-*节点参与桥接，缺省字段不写undefined以符合真实JSON契约。</zh-CN><en>Bridge existing css-* nodes only, omitting undefined fields to satisfy the real JSON contract.</en></lang>
   const symbols = vueArtifact.symbols
     .filter((symbol) => symbol.kind.startsWith("css-"))
     .map((symbol) => ({
       id: symbol.id,
       kind: symbol.kind,
       name: symbol.name,
-      parentId: symbol.parentId,
-      summary: symbol.i18n?.fields?.description?.defaultText ?? symbol.summary,
+      ...(symbol.parentId === undefined ? {} : { parentId: symbol.parentId }),
+      ...((symbol.i18n?.fields?.description?.defaultText ?? symbol.summary) === undefined ? {} : { summary: symbol.i18n?.fields?.description?.defaultText ?? symbol.summary }),
       source: {
         path: vueArtifact.source.path,
         range: symbol.source.range,
         rangeSource: symbol.source.rangeSource,
         confidence: symbol.source.confidence
       },
-      annotation: symbol.annotation,
+      ...(symbol.annotation === undefined ? {} : { annotation: symbol.annotation }),
       ...(symbol.i18n ? { i18n: symbol.i18n } : {}),
       metadata: {
         bridge: "vue-sfc-cssdoc",
@@ -93,14 +104,14 @@ export function vueDocToCssExtraction(vueArtifact, options = {}) {
 
   return {
     contract: "hia-cssdoc-extraction",
-    contractVersion: "0.1.0-draft",
+    contractVersion: "1.0.0",
     producer: {
       name: "@hia-doc/vue-sfc-bridge",
       version: "0.0.0"
     },
     profile: {
       name: "vue-sfc-cssdoc-bridge",
-      version: "0.1.0-draft"
+      version: "1.0.0"
     },
     defaultLocale,
     locales: collectDocumentLocales(options.locales, vueArtifact.locales, symbols, defaultLocale),

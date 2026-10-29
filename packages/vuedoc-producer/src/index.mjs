@@ -294,7 +294,8 @@ async function processInput(input, request, index) {
     {
       ...artifact(`${artifactIdBase}-cssdoc`, "cssdoc-extraction", cssDocPath, "json", "application/json", request.profileIds),
       contract: "hia-cssdoc-extraction",
-      contractVersion: "0.1.0-draft"
+      // <lang><zh-CN>清单采用实际桥接工件身份，避免writer升级后版本描述仍旧。</zh-CN><en>The manifest uses the actual bridge artifact identity so writer upgrades cannot leave stale version metadata.</en></lang>
+      contractVersion: cssDoc.contractVersion
     },
     artifact(`${artifactIdBase}-hia-document`, "hia-document", hiaDocumentPath, "json", "application/json", request.profileIds)
   ];

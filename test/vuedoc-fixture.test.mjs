@@ -141,6 +141,11 @@ describe("Vue SFC bridge", () => {
       assert.ok(result.artifacts.some((artifact) => artifact.kind === "cssdoc-extraction"));
       assert.ok(result.artifacts.some((artifact) => artifact.kind === "doc-source-map"));
       assert.ok(await fileExists(path.join(outputDirectory, "vuedoc.producer-result.json")));
+      // <lang><zh-CN>清单版本必须来自实际CSS桥接工件，不能保留过时draft标签。</zh-CN><en>The manifest version must follow the actual CSS bridge artifact, never a stale draft label.</en></lang>
+      const cssDescriptor = result.artifacts.find((item) => item.kind === "cssdoc-extraction");
+      const cssArtifact = JSON.parse(await fs.readFile(path.join(outputDirectory, cssDescriptor.path), "utf8"));
+      assert.equal(cssDescriptor.contractVersion, cssArtifact.contractVersion);
+      assert.equal(cssDescriptor.contractVersion, "1.0.0");
       const mapDescriptor = result.artifacts.find((item) => item.kind === "doc-source-map");
       const hiaDescriptor = result.artifacts.find((item) => item.kind === "hia-document");
       const map = JSON.parse(await fs.readFile(path.join(outputDirectory, mapDescriptor.path), "utf8"));

@@ -60,3 +60,12 @@ The existing producer-result artifact `kind` field is open, so an opt-in result 
 
 MIT
 
+# CSS extraction identity
+
+CSS extraction artifact descriptors report the version of the actual emitted
+bridge file (`hia-cssdoc-extraction@1.0.0` in current source). The artifact
+profile is paired at `1.0.0`; Vue, HTML and documentation source-map identities
+remain independently versioned.
+
+中文：CSS清单身份与实际桥接文件一致，不将Vue/HTM或包版本一并改号。
+

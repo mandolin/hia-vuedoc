@@ -57,7 +57,7 @@ test("opt-in signs only the native template slot from actual CRLF and non-BMP in
     const sidecarArtifact = result.artifacts.find((item) => item.kind === "ordinary-source-map-coordinate-profile");
     assert.ok(sidecarArtifact);
     const profile = JSON.parse(await fs.readFile(path.join(outputDirectory, sidecarArtifact.path), "utf8"));
-    assert.equal(profile.contractVersion, "0.1.0-draft");
+    assert.equal(profile.contractVersion, "1.0.0");
     assert.deepEqual(profile.sourceSlots.map(({ sectionIndex, sourceIndex, columnUnit }) => ({ sectionIndex, sourceIndex, columnUnit })), [
       { sectionIndex: null, sourceIndex: 0, columnUnit: "utf16-code-unit" }
     ]);

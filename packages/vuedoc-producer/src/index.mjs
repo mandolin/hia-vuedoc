@@ -8,7 +8,7 @@ import {
   VUEDOC_EXTRACTION_CONTRACT,
   VUEDOC_EXTRACTION_CONTRACT_VERSION
 } from "@hia-doc/vuedoc-spec";
-import { createVueTemplateCoordinateProfile, decodeCoordinateSource } from "./coordinate-profile.mjs";
+import { COORDINATE_PROFILE_CONTRACT_VERSION, createVueTemplateCoordinateProfile, decodeCoordinateSource } from "./coordinate-profile.mjs";
 
 /**
  * Declares the runtime version of the VueDoc producer adapter.
@@ -311,7 +311,7 @@ async function processInput(input, request, index) {
     artifacts.push({
       ...artifact(`${artifactIdBase}-coordinate-profile`, "ordinary-source-map-coordinate-profile", coordinateProfilePath, "json", "application/json", request.profileIds),
       contract: "ordinary-source-map-coordinate-profile",
-      contractVersion: "0.1.0-draft"
+      contractVersion: COORDINATE_PROFILE_CONTRACT_VERSION
     });
   }
 

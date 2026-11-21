@@ -46,7 +46,7 @@ The producer can emit:
 - ordinary source maps when produced by the Vue compiler;
 - HIA document artifacts;
 - `doc-source-map` manifests.
-- an optional body-free `ordinary-source-map-coordinate-profile@0.1.0-draft` sidecar for a proven native template source slot.
+- an optional body-free `ordinary-source-map-coordinate-profile@1.0.0` sidecar for a proven native template source slot.
 
 Set `options.emitCoordinateProfile: true` to request the sidecar. It is off by default and requires `emitDocSourceMap: true` and `sourcesContentPolicy: "none"`. The template content must begin on the line after the opening tag, use the native Vue template compiler, and produce one original SFC slot. Inline template content and preprocessed templates fail conservatively because their original columns are not proven by the current compiler mapping chain. Script and style maps remain unverified. The sidecar records digests of the actual ordinary map, documentation map and source bytes from the same build; it contains no source body. A strict reader must still check the current map bytes and authorized source bytes before reporting an exact anchor. Rebuilding the same input without the option removes its previous sidecar.
 

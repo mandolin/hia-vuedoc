@@ -5,6 +5,12 @@
  */
 import { createHash } from "node:crypto";
 
+/**
+ * @lang zh-CN 生产器写入的稳定坐标侧载身份；同一常量同时用于结果描述。
+ * @lang en Stable coordinate sidecar version emitted by the producer and its result descriptor.
+ */
+export const COORDINATE_PROFILE_CONTRACT_VERSION = "1.0.0";
+
 /** @lang zh-CN 严格读取器对每份源码或地图的字节上限。 @lang en The strict reader's per-source and per-map byte limit. */
 const ARTIFACT_LIMIT = 16 * 1024 * 1024;
 /** @lang zh-CN 严格读取器对侧载的字节上限。 @lang en The strict reader's sidecar byte limit. */
@@ -32,7 +38,7 @@ export function decodeCoordinateSource(sourceBytes) {
  * @lang zh-CN 将同轮模板普通图、文档图和 SFC 字节绑定，只认证无预处理且首行无列偏移风险的模板。
  * @lang en Binds same-build template map, documentation map and SFC bytes; certifies only native templates without a first-line column-offset risk.
  * @param {object} input 本轮源码、Vue 模板块及实际落盘的两张图 / This build's source, Vue template block and actual written map bytes.
- * @returns {object} `ordinary-source-map-coordinate-profile@0.1.0-draft` 无正文侧载 / Body-free coordinate sidecar.
+ * @returns {object} `ordinary-source-map-coordinate-profile@1.0.0` 无正文侧载 / Body-free coordinate sidecar.
  * @throws {TypeError} 字节、原始槽位、范围或身份不能被证明 / Bytes, original slot, range or identities cannot be proven.
  */
 export function createVueTemplateCoordinateProfile(input) {
@@ -107,7 +113,7 @@ export function createVueTemplateCoordinateProfile(input) {
   }];
   const profile = {
     contract: "ordinary-source-map-coordinate-profile",
-    contractVersion: "0.1.0-draft",
+    contractVersion: COORDINATE_PROFILE_CONTRACT_VERSION,
     id: `coordinate-profile:vue-template:input-${inputIndex + 1}`,
     ordinaryMap: {
       sourceMapId: templateMap.id,
